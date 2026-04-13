@@ -1959,6 +1959,7 @@
       <li><a href="#menu"     data-page="menu"     onclick="navigate('menu')">المنيو</a></li>
       <li><a href="#branches" data-page="branches" onclick="navigate('branches')">الفروع</a></li>
       <li><a href="#reviews"  data-page="reviews"  onclick="navigate('reviews')">آراء العملاء</a></li>
+      <li><a href="#tracking" data-page="tracking" onclick="navigate('tracking')">تتبع الطلب</a></li>
       <li><a href="#contact"  data-page="contact"  onclick="navigate('contact')">تواصل معنا</a></li>
     </ul>
 
@@ -1982,6 +1983,7 @@
     <li><a href="#menu"     data-page="menu"     onclick="navigate('menu');closeMobile()">المنيو</a></li>
     <li><a href="#branches" data-page="branches" onclick="navigate('branches');closeMobile()">الفروع والمواقع</a></li>
     <li><a href="#reviews"  data-page="reviews"  onclick="navigate('reviews');closeMobile()">آراء العملاء</a></li>
+    <li><a href="#tracking" data-page="tracking" onclick="navigate('tracking');closeMobile()">تتبع الطلب</a></li>
     <li><a href="#contact"  data-page="contact"  onclick="navigate('contact');closeMobile()">تواصل معنا</a></li>
     <li><a href="#cart"     data-page="cart"     onclick="navigate('cart');closeMobile()">🛒 السلة</a></li>
   </ul>
@@ -2011,6 +2013,9 @@
         <div class="hero-cta">
           <a href="#menu" class="btn btn-primary btn-hero" onclick="navigate('menu')">
             🍽️ اطلب الآن
+          </a>
+          <a href="#tracking" class="btn btn-outline btn-hero" onclick="navigate('tracking')">
+            📍 تتبع طلبك
           </a>
           <a href="https://wa.me/966560670698" target="_blank" class="btn btn-outline btn-hero">
             📱 تواصل معنا
@@ -2108,24 +2113,26 @@
         <h1>المنيو الكامل</h1>
         <p>اختر من تشكيلتنا الواسعة — كل شيء طازج ويومي</p>
       </div>
-      <div class="menu-controls">
-        <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="menu-search" placeholder="ابحث عن وجبة..." oninput="filterMenu()" />
-        </div>
-      </div>
     </div>
 
     <!-- Branch selector (rendered dynamically) -->
     <div id="branch-selector-wrap"></div>
 
-    <!-- Category tabs (rendered by JS from localStorage or defaults) -->
-    <div class="cat-tabs" id="cat-tabs">
-      <!-- populated by renderCatTabs() -->
-    </div>
-
-    <div class="menu-grid" id="menu-grid">
-      <!-- Rendered by JS -->
+    <!-- Gated menu content — shown only after branch selection -->
+    <div id="menu-gated-content" style="display:none; opacity:0; transition:opacity 0.35s ease;">
+      <div class="menu-controls" style="margin-bottom:20px;">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="menu-search" placeholder="ابحث عن وجبة..." oninput="filterMenu()" />
+        </div>
+      </div>
+      <!-- Category tabs (rendered by JS from localStorage or defaults) -->
+      <div class="cat-tabs" id="cat-tabs">
+        <!-- populated by renderCatTabs() -->
+      </div>
+      <div class="menu-grid" id="menu-grid">
+        <!-- Rendered by JS -->
+      </div>
     </div>
   </div>
 </div><!-- /page-menu -->
@@ -3055,14 +3062,26 @@ function renderBranchSelector() {
   const ctx = getCartContext();
   const cart = getCart();
   const hasItems = cart.length > 0;
+  const gated = document.getElementById('menu-gated-content');
 
-  if (!branches.length) { wrap.innerHTML = ''; return; }
+  // 0 active branches → restaurant closed
+  if (!branches.length) {
+    wrap.innerHTML = `<div style="text-align:center;padding:60px 24px;background:var(--card);border:1px solid var(--border2);border-radius:12px;color:var(--gray);font-size:1.1rem;font-weight:700;">🔒 المطعم مغلق حالياً</div>`;
+    if (gated) { gated.style.display = 'none'; gated.style.opacity = '0'; }
+    return;
+  }
+
+  const branchSelected = !!(ctx && ctx.branchName);
 
   const lockBanner = (hasItems && ctx)
     ? `<div class="branch-lock-banner">
         📌 أنت تتصفح منيو <strong style="margin:0 4px">${escHtml(ctx.branchName)}</strong> — لتغيير الفرع امسح السلة أو اختر فرعاً آخر
         <button onclick="requestBranchChange(null)">تغيير الفرع</button>
        </div>`
+    : '';
+
+  const instructionMsg = !branchSelected
+    ? `<div style="margin-bottom:16px;padding:14px 18px;background:rgba(230,57,70,0.08);border:1px solid rgba(230,57,70,0.25);border-radius:8px;font-size:1rem;font-weight:700;color:var(--red);text-align:center;">اختر الفرع للاطلاع على المنيو والطلب</div>`
     : '';
 
   const cards = branches.map(b => {
@@ -3075,9 +3094,22 @@ function renderBranchSelector() {
     </div>`;
   }).join('');
 
-  wrap.innerHTML = lockBanner +
+  wrap.innerHTML = instructionMsg + lockBanner +
     `<div style="margin-bottom:8px"><span class="branch-selector-label">اختر الفرع</span></div>
      <div class="branch-selector-cards">${cards}</div>`;
+
+  // Show/hide gated menu content
+  if (gated) {
+    if (branchSelected) {
+      if (gated.style.display === 'none' || gated.style.display === '') {
+        gated.style.display = 'block';
+        requestAnimationFrame(() => { gated.style.opacity = '1'; });
+      }
+    } else {
+      gated.style.opacity = '0';
+      gated.style.display = 'none';
+    }
+  }
 }
 
 function selectBranch(branchName, el) {
@@ -3105,31 +3137,14 @@ function closeBranchChangeModal() {
 }
 
 function confirmBranchChange() {
-  const branchName = _pendingBranchName;
   document.getElementById('branch-change-modal').style.display = 'none';
-  if (!branchName) {
-    // Clear branch and cart
-    clearCartContext();
-    saveCart([]);
-    renderBranchSelector();
-    filterMenu();
-    return;
-  }
-  // Switch branch: remove unavailable items
-  const newCtx = { branchName };
-  setCartContext(newCtx);
-  const cart = getCart().filter(c => {
-    const item = MENU.find(i => i.id === c.id);
-    return !item || isItemAvailableInBranch(item, branchName);
-  });
-  saveCart(cart);
-  renderBranchSelector();
-  filterMenu();
-  if (cart.length === 0 && getCart().length === 0) {
-    showToast('تم تغيير الفرع', 'success');
-  } else {
-    showToast(`تم التبديل إلى ${branchName}`, 'success');
-  }
+  _pendingBranchName = undefined;
+  // Always do a full wipe: clear items and branch context so the selector unlocks
+  saveCart([]);          // empties localStorage + triggers updateCartBadge → badge = 0
+  clearCartContext();    // removes branchName so hasItems check is false
+  renderBranchSelector(); // re-renders with no lock banner
+  filterMenu();           // hides gated content until a branch is tapped
+  showToast('تم مسح السلة — اختر الفرع من جديد', 'success');
 }
 
 /* ─── Dynamic Branches Page ───────────────────────────── */
