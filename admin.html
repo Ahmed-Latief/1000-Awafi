@@ -1,0 +1,2917 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>لوحة التحكم — ألف عوافي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@latest/dist/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#111111;--card:#161616;--card2:#1a1a1a;
+  --border:#222;--border2:#2a2a2a;
+  --red:#E63946;--orange:#F77F00;--yellow:#FCBF49;
+  --green:#2ecc71;--blue:#3498db;
+  --white:#fff;--gray:#999;--gray2:#555;--text:#F0F0F0;
+  --sidebar-w:260px;--topbar-h:60px;--radius:8px;
+  --tr:0.2s cubic-bezier(0.4,0,0.2,1);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden;direction:rtl}
+a{color:inherit;text-decoration:none}
+button{font-family:'Cairo',sans-serif;cursor:pointer;border:none;outline:none}
+input,textarea,select{font-family:'Cairo',sans-serif;outline:none}
+img{display:block;max-width:100%}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--red);border-radius:3px}
+
+/* ── LOGIN ─────────────────────────────────── */
+#login-screen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;z-index:9999;
+}
+.login-box{
+  background:var(--card);border:1px solid var(--border2);border-radius:12px;
+  padding:48px 40px;width:100%;max-width:420px;text-align:center;
+}
+.login-logo{font-size:2rem;font-weight:900;color:var(--white);margin-bottom:4px}
+.login-logo span{color:var(--red)}
+.login-sub{color:var(--gray);font-size:0.88rem;margin-bottom:32px}
+.login-field{margin-bottom:16px;text-align:right}
+.login-field label{display:block;font-size:0.82rem;color:var(--gray);margin-bottom:6px;font-weight:600}
+.login-field input{
+  width:100%;background:var(--bg2);border:1px solid var(--border2);
+  color:var(--text);padding:11px 14px;border-radius:var(--radius);font-size:0.95rem;
+  transition:border-color var(--tr);
+}
+.login-field input:focus{border-color:var(--red)}
+.login-btn{
+  width:100%;padding:13px;background:var(--red);color:var(--white);
+  font-size:1rem;font-weight:700;border-radius:var(--radius);margin-top:8px;
+  transition:background var(--tr),transform var(--tr);
+}
+.login-btn:hover{background:#c8313d;transform:scale(1.02)}
+.login-error{color:var(--red);font-size:0.82rem;margin-top:10px;min-height:18px}
+
+/* ── SHELL ─────────────────────────────────── */
+#admin-shell{display:none;min-height:100vh}
+#admin-shell.visible{display:flex}
+
+/* ── SIDEBAR ───────────────────────────────── */
+#sidebar{
+  width:var(--sidebar-w);min-height:100vh;background:var(--bg2);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;
+  position:fixed;top:0;right:0;z-index:200;
+  transition:transform var(--tr);
+}
+#sidebar .sidebar-logo{
+  padding:20px 20px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+#sidebar .sidebar-logo-text{font-size:1.05rem;font-weight:900;color:var(--white);line-height:1.2}
+#sidebar .sidebar-logo-text span{color:var(--red)}
+#sidebar .sidebar-logo-sub{font-size:0.72rem;color:var(--gray);font-weight:400}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
+.sidebar-nav a{
+  display:flex;align-items:center;gap:12px;padding:11px 20px;
+  color:var(--gray);font-size:0.9rem;font-weight:600;
+  transition:color var(--tr),background var(--tr);border-right:3px solid transparent;
+  cursor:pointer;
+}
+.sidebar-nav a:hover{color:var(--white);background:rgba(255,255,255,0.04)}
+.sidebar-nav a.active{color:var(--red);background:rgba(230,57,70,0.08);border-right-color:var(--red)}
+.sidebar-nav a .nav-icon{font-size:1.1rem;width:22px;text-align:center;flex-shrink:0}
+.sidebar-nav a .nav-badge{
+  margin-right:auto;background:var(--red);color:var(--white);
+  font-size:0.68rem;font-weight:800;padding:1px 7px;border-radius:10px;min-width:20px;text-align:center;
+}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+.sidebar-footer button{
+  width:100%;padding:9px;background:transparent;border:1px solid var(--border2);
+  color:var(--gray);font-size:0.85rem;font-weight:600;border-radius:var(--radius);
+  transition:border-color var(--tr),color var(--tr);display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.sidebar-footer button:hover{border-color:var(--red);color:var(--red)}
+
+/* ── MAIN AREA ─────────────────────────────── */
+#main-area{
+  margin-right:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;
+  transition:margin-right var(--tr);
+}
+
+/* ── TOPBAR ────────────────────────────────── */
+#topbar{
+  height:var(--topbar-h);background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;position:sticky;top:0;z-index:100;gap:16px;
+}
+.topbar-left{display:flex;align-items:center;gap:12px}
+#sidebar-toggle{
+  display:none;background:none;border:1px solid var(--border2);color:var(--gray);
+  width:36px;height:36px;border-radius:6px;font-size:1rem;
+  align-items:center;justify-content:center;
+}
+.topbar-title{font-size:1rem;font-weight:700;color:var(--white)}
+.topbar-title span{color:var(--gray);font-weight:400;font-size:0.85rem}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-right .admin-tag{
+  background:rgba(230,57,70,0.12);color:var(--red);font-size:0.78rem;
+  font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(230,57,70,0.25);
+}
+
+/* ── CONTENT AREA ──────────────────────────── */
+#content{flex:1;padding:28px 24px;min-height:0}
+.admin-panel{display:none}
+.admin-panel.active{display:block}
+
+/* ── PAGE HEADER ───────────────────────────── */
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;gap:12px;flex-wrap:wrap;
+}
+.panel-header h2{font-size:1.35rem;font-weight:800;color:var(--white)}
+.panel-header p{color:var(--gray);font-size:0.85rem;margin-top:2px}
+
+/* ── BUTTONS ───────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 18px;
+  font-size:0.85rem;font-weight:700;border-radius:var(--radius);
+  transition:transform var(--tr),background var(--tr),opacity var(--tr);cursor:pointer;border:none;white-space:nowrap;
+}
+.btn-primary{background:var(--red);color:var(--white)}
+.btn-primary:hover{background:#c8313d;transform:scale(1.03)}
+.btn-orange{background:var(--orange);color:var(--white)}
+.btn-orange:hover{background:#d96e00;transform:scale(1.03)}
+.btn-green{background:var(--green);color:#000}
+.btn-green:hover{background:#27ae60;transform:scale(1.03)}
+.btn-sm{padding:5px 12px;font-size:0.78rem}
+.btn-ghost{background:transparent;color:var(--gray);border:1px solid var(--border2)}
+.btn-ghost:hover{border-color:var(--red);color:var(--red)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid rgba(230,57,70,0.3)}
+.btn-danger:hover{background:rgba(230,57,70,0.1)}
+.btn-icon{width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;font-size:0.9rem}
+
+/* ── KPI CARDS ─────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:20px;display:flex;flex-direction:column;gap:8px;
+}
+.kpi-icon{font-size:1.6rem}
+.kpi-label{font-size:0.78rem;color:var(--gray);font-weight:600}
+.kpi-value{font-size:1.8rem;font-weight:900;color:var(--white);line-height:1}
+.kpi-sub{font-size:0.75rem;color:var(--gray2)}
+.kpi-card.red .kpi-value{color:var(--red)}
+.kpi-card.orange .kpi-value{color:var(--orange)}
+.kpi-card.yellow .kpi-value{color:var(--yellow)}
+.kpi-card.green .kpi-value{color:var(--green)}
+
+/* ── TABLES ─────────────────────────────────── */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.table-head{
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.table-head h3{font-size:0.95rem;font-weight:700;color:var(--white)}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+thead th{
+  padding:10px 14px;text-align:right;font-size:0.77rem;font-weight:700;
+  color:var(--gray);background:var(--card2);border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid var(--border);transition:background var(--tr)}
+tbody tr:nth-child(odd){background:var(--card)}
+tbody tr:nth-child(even){background:var(--card2)}
+tbody tr:hover{background:rgba(255,255,255,0.04)}
+tbody td{padding:10px 14px;font-size:0.83rem;color:var(--text);vertical-align:middle}
+tbody td .cell-muted{color:var(--gray);font-size:0.78rem}
+
+/* ── STATUS BADGES ─────────────────────────── */
+.badge{
+  display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:0.72rem;font-weight:700;white-space:nowrap;
+}
+.badge-new{background:rgba(52,152,219,0.15);color:#5dade2;border:1px solid rgba(52,152,219,0.25)}
+.badge-prep{background:rgba(247,127,0,0.15);color:var(--orange);border:1px solid rgba(247,127,0,0.25)}
+.badge-ready{background:rgba(252,191,73,0.15);color:var(--yellow);border:1px solid rgba(252,191,73,0.25)}
+.badge-done{background:rgba(46,204,113,0.15);color:var(--green);border:1px solid rgba(46,204,113,0.25)}
+.badge-cancelled{background:rgba(230,57,70,0.15);color:var(--red);border:1px solid rgba(230,57,70,0.25)}
+.badge-pending{background:rgba(247,127,0,0.15);color:var(--orange);border:1px solid rgba(247,127,0,0.25)}
+.badge-approved{background:rgba(46,204,113,0.15);color:var(--green);border:1px solid rgba(46,204,113,0.25)}
+
+/* ── SEARCH / FILTER BAR ───────────────────── */
+.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-input{
+  background:var(--bg);border:1px solid var(--border2);color:var(--text);
+  padding:8px 12px;border-radius:var(--radius);font-size:0.85rem;
+  transition:border-color var(--tr);min-width:180px;
+}
+.search-input:focus{border-color:var(--red)}
+.filter-select{
+  background:var(--bg);border:1px solid var(--border2);color:var(--text);
+  padding:8px 12px;border-radius:var(--radius);font-size:0.85rem;cursor:pointer;
+}
+
+/* ── TABS ───────────────────────────────────── */
+.tab-bar{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px;flex-wrap:wrap}
+.tab-btn{
+  padding:9px 18px;background:none;color:var(--gray);font-size:0.88rem;font-weight:600;
+  border-radius:var(--radius) var(--radius) 0 0;border:none;
+  transition:color var(--tr),background var(--tr);cursor:pointer;position:relative;
+}
+.tab-btn:hover{color:var(--white)}
+.tab-btn.active{color:var(--red);background:rgba(230,57,70,0.08)}
+.tab-btn.active::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;
+  background:var(--red);border-radius:1px 1px 0 0;
+}
+.tab-badge{
+  display:inline-block;background:var(--red);color:var(--white);
+  font-size:0.68rem;font-weight:800;padding:0 6px;border-radius:10px;margin-right:5px;
+}
+
+/* ── THUMBNAIL ─────────────────────────────── */
+.thumb{
+  width:44px;height:44px;border-radius:6px;object-fit:cover;
+  background:var(--bg2);border:1px solid var(--border);
+}
+.thumb-placeholder{
+  width:44px;height:44px;border-radius:6px;background:var(--bg2);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;color:var(--gray2);flex-shrink:0;
+}
+
+/* ── TOGGLE ─────────────────────────────────── */
+.toggle-wrap{display:flex;align-items:center;gap:10px}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--border2);border-radius:12px;cursor:pointer;
+  transition:background var(--tr);
+}
+.toggle-slider::before{
+  content:'';position:absolute;width:18px;height:18px;
+  left:3px;top:3px;background:var(--white);border-radius:50%;
+  transition:transform var(--tr);
+}
+.toggle input:checked + .toggle-slider{background:var(--green)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(18px)}
+
+/* ── FORM ELEMENTS ─────────────────────────── */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:0.82rem;color:var(--gray);margin-bottom:6px;font-weight:600}
+.form-input{
+  width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);
+  padding:10px 13px;border-radius:var(--radius);font-size:0.9rem;
+  transition:border-color var(--tr);
+}
+.form-input:focus{border-color:var(--red)}
+textarea.form-input{resize:vertical;min-height:80px}
+select.form-input{cursor:pointer}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.img-preview{
+  width:100%;max-height:140px;object-fit:cover;border-radius:6px;
+  border:1px solid var(--border);margin-top:8px;display:none;
+}
+
+/* ── MODAL ─────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.75);
+  display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--card);border:1px solid var(--border2);border-radius:12px;
+  width:100%;max-width:560px;max-height:90vh;overflow-y:auto;
+  padding:28px;position:relative;
+}
+.modal.modal-sm{max-width:420px}
+.modal-close{
+  position:absolute;top:16px;left:16px;background:none;border:none;
+  color:var(--gray);font-size:1.2rem;cursor:pointer;
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;transition:color var(--tr),background var(--tr);
+}
+.modal-close:hover{color:var(--white);background:rgba(255,255,255,0.08)}
+.modal-title{font-size:1.1rem;font-weight:800;color:var(--white);margin-bottom:20px;padding-left:36px}
+.modal-actions{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
+
+/* ── CARD SECTION ──────────────────────────── */
+.section-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:20px;margin-bottom:16px;
+}
+.section-card h3{font-size:0.95rem;font-weight:700;color:var(--white);margin-bottom:16px}
+
+/* ── QUICK ACTIONS ─────────────────────────── */
+.quick-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+
+/* ── ORDER EXPAND ROW ──────────────────────── */
+.order-detail-row td{padding:0!important;border-bottom:1px solid var(--border)}
+.order-detail-inner{padding:16px 20px;background:rgba(0,0,0,0.3)}
+.order-items-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.order-item-tag{
+  background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  padding:4px 10px;font-size:0.78rem;color:var(--text);
+}
+.order-history{font-size:0.78rem;color:var(--gray);margin-top:8px}
+.order-history span{color:var(--orange)}
+
+/* ── DELIVERY PLATFORM ROW ─────────────────── */
+.platform-row{
+  display:flex;align-items:center;gap:12px;padding:12px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;
+}
+.platform-logo{
+  width:36px;height:36px;border-radius:8px;background:var(--card);
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;
+  overflow:hidden;
+}
+.platform-logo img{width:100%;height:100%;object-fit:cover}
+.platform-name{font-weight:700;font-size:0.9rem;color:var(--white);flex:1}
+.platform-url{font-size:0.78rem;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+
+/* ── BRANCH CARD ───────────────────────────── */
+.branch-admin-card{
+  background:var(--card2);border:1px solid var(--border);border-radius:8px;
+  padding:16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:14px;
+}
+.branch-admin-info{flex:1}
+.branch-admin-name{font-size:1rem;font-weight:700;color:var(--white);margin-bottom:6px}
+.branch-admin-detail{font-size:0.82rem;color:var(--gray);display:flex;align-items:center;gap:6px;margin-bottom:4px}
+
+/* ── REVIEW CARD ────────────────────────────── */
+.review-card{
+  background:var(--card2);border:1px solid var(--border);border-radius:8px;
+  padding:16px;margin-bottom:12px;
+}
+.review-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.review-name{font-weight:700;color:var(--white);font-size:0.9rem}
+.review-stars{color:var(--yellow);font-size:1rem;letter-spacing:1px}
+.review-date{font-size:0.75rem;color:var(--gray2)}
+.review-comment{font-size:0.85rem;color:var(--gray);line-height:1.6}
+.review-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+/* ── SETTINGS ROWS ─────────────────────────── */
+.settings-row{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:14px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;
+}
+.settings-row:last-child{border-bottom:none}
+.settings-row-label{font-size:0.9rem;font-weight:600;color:var(--white)}
+.settings-row-sub{font-size:0.78rem;color:var(--gray);margin-top:2px}
+
+/* ── TOAST ──────────────────────────────────── */
+#toast-wrap{position:fixed;bottom:24px;left:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--card2);border:1px solid var(--border2);color:var(--text);
+  padding:12px 18px;border-radius:8px;font-size:0.88rem;font-weight:600;
+  box-shadow:0 4px 16px rgba(0,0,0,0.4);
+  animation:slideIn 0.3s ease;min-width:200px;max-width:320px;
+}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--red);color:var(--red)}
+.toast.out{animation:slideOut 0.3s ease forwards}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes slideOut{to{transform:translateY(20px);opacity:0}}
+
+/* ── EMPTY STATE ────────────────────────────── */
+.empty-state{
+  text-align:center;padding:48px 20px;color:var(--gray);
+}
+.empty-state .empty-icon{font-size:2.5rem;margin-bottom:12px}
+.empty-state p{font-size:0.9rem}
+
+/* ── CONFIRM DIALOG ─────────────────────────── */
+.confirm-msg{color:var(--gray);font-size:0.9rem;margin-bottom:20px;line-height:1.6}
+
+/* ── STAR RATING DISPLAY ─────────────────────── */
+.stars-input{display:flex;gap:4px;direction:ltr;justify-content:flex-end}
+.stars-input span{font-size:1.4rem;cursor:pointer;color:var(--gray2);transition:color var(--tr)}
+.stars-input span.on{color:var(--yellow)}
+
+/* ── MOBILE OVERLAY ─────────────────────────── */
+#sidebar-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:199;
+}
+
+/* ── RESPONSIVE ─────────────────────────────── */
+@media(max-width:900px){
+  :root{--sidebar-w:260px}
+  #sidebar{transform:translateX(100%)}
+  #sidebar.open{transform:translateX(0)}
+  #sidebar-overlay.open{display:block}
+  #main-area{margin-right:0}
+  #sidebar-toggle{display:flex}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .form-row{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  #content{padding:16px}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .modal{padding:20px}
+  .topbar-title span{display:none}
+}
+
+/* ── REPORTS PAGE ─────────────────────────── */
+.reports-filter-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-bottom:16px;background:var(--card);padding:14px 20px;
+  border:1px solid var(--border);border-radius:10px;
+}
+.date-range-btn{
+  padding:7px 14px;background:none;border:1px solid var(--border2);
+  color:var(--gray);font-size:0.82rem;font-weight:600;border-radius:var(--radius);
+  cursor:pointer;transition:all var(--tr);font-family:'Cairo',sans-serif;
+}
+.date-range-btn.active{background:var(--red);color:var(--white);border-color:var(--red)}
+.date-range-btn:hover:not(.active){border-color:var(--gray);color:var(--white)}
+.custom-date-range{
+  display:none;align-items:center;gap:8px;flex-wrap:wrap;
+  background:var(--card);padding:12px 20px;border:1px solid var(--border);
+  border-radius:10px;margin-bottom:16px;
+}
+.custom-date-range.show{display:flex}
+.custom-date-range input[type="date"]{
+  background:var(--bg);border:1px solid var(--border2);color:var(--text);
+  padding:6px 10px;border-radius:var(--radius);font-size:0.82rem;
+  font-family:'Cairo',sans-serif;color-scheme:dark;
+}
+.reports-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.reports-kpi-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:20px;position:relative;overflow:hidden;
+}
+.reports-kpi-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0;
+}
+.reports-kpi-card.r1::before{background:var(--red)}
+.reports-kpi-card.r2::before{background:var(--orange)}
+.reports-kpi-card.r3::before{background:var(--yellow)}
+.reports-kpi-card.r4::before{background:#2EC4B6}
+.reports-kpi-card .kpi-value{font-size:1.6rem;font-weight:900;color:var(--white);line-height:1.1;margin:6px 0}
+.kpi-change{font-size:0.75rem;font-weight:700;margin-top:4px}
+.kpi-change.up{color:var(--green)}
+.kpi-change.down{color:var(--red)}
+.kpi-change.neutral{color:var(--gray)}
+.charts-section-label{
+  font-size:0.75rem;font-weight:800;color:var(--gray);letter-spacing:2px;
+  text-transform:uppercase;margin:24px 0 12px;padding-right:4px;
+  border-right:3px solid var(--red);
+}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.chart-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:20px;
+}
+.chart-card.full-width{grid-column:1/-1}
+.chart-card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;gap:10px;
+}
+.chart-card-head h3{font-size:0.9rem;font-weight:700;color:var(--white)}
+.chart-canvas-wrap{position:relative;width:100%}
+.chart-empty{
+  text-align:center;padding:48px 20px;color:var(--gray2);font-size:0.85rem;
+  background:rgba(255,255,255,0.02);border-radius:6px;margin-top:8px;
+}
+.export-btn-wrap{position:relative;display:inline-block}
+.export-dropdown{
+  position:absolute;top:calc(100% + 4px);left:0;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:4px 0;z-index:50;
+  min-width:130px;box-shadow:0 4px 20px rgba(0,0,0,0.5);display:none;
+}
+.export-dropdown.open{display:block}
+.export-dropdown button{
+  display:block;width:100%;padding:8px 14px;text-align:right;
+  background:none;color:var(--text);font-size:0.82rem;font-weight:600;
+  cursor:pointer;transition:background var(--tr);font-family:'Cairo',sans-serif;
+  border:none;
+}
+.export-dropdown button:hover{background:rgba(255,255,255,0.06)}
+.order-status-select{
+  background:var(--bg);border:1px solid var(--border2);color:var(--text);
+  padding:5px 8px;border-radius:var(--radius);font-size:0.78rem;
+  font-family:'Cairo',sans-serif;cursor:pointer;
+}
+@media(max-width:900px){
+  .charts-grid{grid-template-columns:1fr}
+  .chart-card.full-width{grid-column:1}
+  .reports-kpi-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+  .reports-kpi-grid{grid-template-columns:1fr 1fr}
+}
+/* ─── Branch Availability & Per-Branch Settings ─── */
+.branch-avail-col{font-size:0.78rem;color:var(--gray);max-width:160px}
+.branch-avail-pill{display:inline-flex;align-items:center;gap:4px;font-size:0.73rem;background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:2px 8px;margin:2px 2px}
+.branch-avail-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.branch-avail-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border2);gap:10px;font-size:0.85rem}
+.branch-avail-row:last-child{border-bottom:none}
+.branch-inactive-badge{display:inline-block;background:rgba(230,57,70,0.15);color:var(--red);font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid rgba(230,57,70,0.3);margin-right:6px}
+.branch-active-badge{display:inline-block;background:rgba(74,222,128,0.12);color:#4ade80;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid rgba(74,222,128,0.3);margin-right:6px}
+.per-branch-settings-section{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.per-branch-settings-title{font-size:0.9rem;font-weight:700;color:var(--orange);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">ألف <span>عوافي</span></div>
+    <div class="login-sub">لوحة التحكم الإدارية</div>
+    <div class="login-field">
+      <label>كلمة المرور</label>
+      <input type="password" id="login-pw" placeholder="أدخل كلمة المرور" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">دخول</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ══ ADMIN SHELL ═════════════════════════════════ -->
+<div id="admin-shell">
+
+  <!-- Sidebar overlay (mobile) -->
+  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div>
+        <div class="sidebar-logo-text">ألف <span>عوافي</span></div>
+        <div class="sidebar-logo-sub">لوحة التحكم</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <a onclick="goPanel('overview')"   data-panel="overview"><span class="nav-icon">📊</span>نظرة عامة</a>
+      <a onclick="goPanel('menu')"       data-panel="menu"><span class="nav-icon">🍽️</span>إدارة المنيو</a>
+      <a onclick="goPanel('orders')"     data-panel="orders"><span class="nav-icon">📋</span>الطلبات<span class="nav-badge" id="new-orders-badge" style="display:none">0</span></a>
+      <a onclick="goPanel('reviews')"    data-panel="reviews"><span class="nav-icon">⭐</span>التقييمات<span class="nav-badge" id="pending-reviews-badge" style="display:none">0</span></a>
+      <a onclick="goPanel('branches')"   data-panel="branches"><span class="nav-icon">📍</span>الفروع</a>
+      <a onclick="goPanel('order-settings')" data-panel="order-settings"><span class="nav-icon">⚙️</span>إعدادات الطلبات</a>
+      <a onclick="goPanel('reports')"    data-panel="reports"><span class="nav-icon">📈</span>التقارير والإحصاءات</a>
+      <a onclick="goPanel('settings')"   data-panel="settings"><span class="nav-icon">🔧</span>الإعدادات العامة</a>
+    </div>
+    <div class="sidebar-footer">
+      <button onclick="doLogout()">🚪 تسجيل الخروج</button>
+    </div>
+  </nav>
+
+  <!-- MAIN AREA -->
+  <div id="main-area">
+    <!-- TOP BAR -->
+    <div id="topbar">
+      <div class="topbar-left">
+        <button id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title">لوحة التحكم <span>— ألف عوافي</span></div>
+      </div>
+      <div class="topbar-right">
+        <span class="admin-tag">مدير</span>
+        <button class="btn btn-ghost btn-sm" onclick="window.open('index.html','_blank')">🌐 الموقع</button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="content">
+
+      <!-- ═══ PANEL: OVERVIEW ════════════════════════ -->
+      <div class="admin-panel active" id="panel-overview">
+        <div class="panel-header">
+          <div><h2>نظرة عامة</h2><p>ملخص أداء المطعم اليوم</p></div>
+          <button class="btn btn-primary btn-sm" onclick="refreshOverview()">🔄 تحديث</button>
+        </div>
+        <div class="kpi-grid" id="kpi-grid"></div>
+        <div class="table-wrap">
+          <div class="table-head">
+            <h3>آخر ١٠ طلبات</h3>
+            <button class="btn btn-ghost btn-sm" onclick="goPanel('orders')">عرض الكل ←</button>
+          </div>
+          <div class="table-scroll">
+            <table id="recent-orders-table">
+              <thead><tr>
+                <th>رقم الطلب</th><th>العميل</th><th>النوع</th>
+                <th>الإجمالي</th><th>الحالة</th><th>الوقت</th>
+              </tr></thead>
+              <tbody id="recent-orders-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="quick-actions">
+          <button class="btn btn-primary" onclick="openItemModal()">➕ إضافة صنف جديد</button>
+          <button class="btn btn-orange" onclick="goPanel('orders')">📋 عرض الطلبات</button>
+          <button class="btn btn-ghost" onclick="goPanel('reviews')">⭐ التقييمات المعلقة</button>
+        </div>
+      </div>
+
+      <!-- ═══ PANEL: MENU ════════════════════════════ -->
+      <div class="admin-panel" id="panel-menu">
+        <div class="panel-header">
+          <div><h2>إدارة المنيو</h2><p>إضافة وتعديل وحذف الأصناف والفئات</p></div>
+          <button class="btn btn-primary" onclick="openItemModal()">➕ إضافة صنف جديد</button>
+        </div>
+
+        <!-- Category filter + search -->
+        <div class="section-card" style="margin-bottom:16px;padding:14px 20px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between">
+            <div class="filter-bar">
+              <input class="search-input" id="menu-search-admin" placeholder="🔍 ابحث في الأصناف..." oninput="renderMenuTable()"/>
+              <select class="filter-select" id="menu-cat-filter" onchange="renderMenuTable()">
+                <option value="all">كل الفئات</option>
+              </select>
+              <select class="filter-select" id="menu-branch-filter" onchange="renderMenuTable()">
+                <option value="all">كل الفروع</option>
+              </select>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="openCatModal()">📂 إدارة الفئات</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th>صورة</th><th>اسم الصنف</th><th>الفئة</th><th>السعر</th><th>الحالة</th><th>مميز</th><th>الفروع</th><th>إجراءات</th>
+              </tr></thead>
+              <tbody id="menu-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PANEL: ORDERS ══════════════════════════ -->
+      <div class="admin-panel" id="panel-orders">
+        <div class="panel-header">
+          <div><h2>إدارة الطلبات</h2><p>عرض وتحديث حالة جميع الطلبات</p></div>
+          <div class="filter-bar">
+            <input class="search-input" id="orders-search" placeholder="🔍 اسم أو رقم طلب..." oninput="renderOrdersTable()"/>
+            <select class="filter-select" id="orders-branch-filter" onchange="setOrderBranchFilter(this.value)">
+              <option value="all">كل الفروع</option>
+            </select>
+          </div>
+        </div>
+        <div class="tab-bar" id="orders-tabs">
+          <button class="tab-btn active" data-status="all" onclick="setOrderTab(this,'all')">الكل</button>
+          <button class="tab-btn" data-status="new" onclick="setOrderTab(this,'new')">جديد</button>
+          <button class="tab-btn" data-status="preparing" onclick="setOrderTab(this,'preparing')">قيد التحضير</button>
+          <button class="tab-btn" data-status="ready" onclick="setOrderTab(this,'ready')">جاهز</button>
+          <button class="tab-btn" data-status="completed" onclick="setOrderTab(this,'completed')">مكتمل</button>
+          <button class="tab-btn" data-status="cancelled" onclick="setOrderTab(this,'cancelled')">ملغي</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table id="orders-table">
+              <thead><tr>
+                <th></th><th>رقم الطلب</th><th>العميل</th><th>الهاتف</th>
+                <th>الفرع</th><th>النوع</th><th>الإجمالي</th><th>الحالة</th><th>الوقت</th><th>تحديث</th>
+              </tr></thead>
+              <tbody id="orders-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PANEL: REVIEWS ═════════════════════════ -->
+      <div class="admin-panel" id="panel-reviews">
+        <div class="panel-header">
+          <div><h2>إدارة التقييمات</h2><p>الموافقة على تقييمات العملاء أو رفضها</p></div>
+        </div>
+        <div class="tab-bar">
+          <button class="tab-btn active" id="rev-tab-pending" onclick="setRevTab('pending')">بانتظار الموافقة <span class="tab-badge" id="pending-count-badge">0</span></button>
+          <button class="tab-btn" id="rev-tab-approved" onclick="setRevTab('approved')">معتمدة</button>
+          <button class="tab-btn" id="rev-tab-rejected" onclick="setRevTab('rejected')">مرفوضة</button>
+        </div>
+        <div id="reviews-container"></div>
+      </div>
+
+      <!-- ═══ PANEL: BRANCHES ════════════════════════ -->
+      <div class="admin-panel" id="panel-branches">
+        <div class="panel-header">
+          <div><h2>إدارة الفروع</h2><p>معلومات الفروع وأوقات العمل</p></div>
+          <button class="btn btn-primary" onclick="openBranchModal()">➕ إضافة فرع</button>
+        </div>
+        <div id="branches-list"></div>
+      </div>
+
+      <!-- ═══ PANEL: ORDER SETTINGS ══════════════════ -->
+      <div class="admin-panel" id="panel-order-settings">
+        <div class="panel-header">
+          <div><h2>إعدادات الطلبات</h2><p>تحكم في أنواع الطلبات ومنصات التوصيل</p></div>
+        </div>
+
+        <div class="section-card">
+          <h3>أنواع الطلبات</h3>
+          <div id="order-types-settings"></div>
+        </div>
+
+        <div class="section-card">
+          <h3>وقت التحضير التقديري</h3>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <input type="number" id="prep-time-input" class="form-input" style="max-width:120px" min="1" max="120" placeholder="٣٠"/>
+            <span style="color:var(--gray);font-size:0.88rem">دقيقة</span>
+            <button class="btn btn-primary btn-sm" onclick="savePrepTime()">حفظ</button>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h3 style="margin-bottom:0">منصات التوصيل</h3>
+            <button class="btn btn-ghost btn-sm" onclick="openPlatformModal()">➕ إضافة منصة</button>
+          </div>
+          <div id="platforms-list"></div>
+        </div>
+      </div>
+
+      <!-- ═══ PANEL: SETTINGS ════════════════════════ -->
+      <div class="admin-panel" id="panel-settings">
+        <div class="panel-header">
+          <div><h2>الإعدادات العامة</h2><p>معلومات المطعم والحساب</p></div>
+        </div>
+
+        <div class="section-card">
+          <h3>معلومات المطعم</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>اسم المطعم</label>
+              <input type="text" id="set-name" class="form-input" placeholder="ألف عوافي"/>
+            </div>
+            <div class="form-group">
+              <label>الشعار / الوصف المختصر</label>
+              <input type="text" id="set-tagline" class="form-input" placeholder="طعم يشعل حواسك"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>رقم واتساب</label>
+              <input type="text" id="set-whatsapp" class="form-input" placeholder="966560670698" dir="ltr"/>
+            </div>
+            <div class="form-group">
+              <label>نسبة ضريبة القيمة المضافة (%)</label>
+              <input type="number" id="set-vat" class="form-input" placeholder="15" min="0" max="100"/>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveRestaurantSettings()">💾 حفظ التغييرات</button>
+        </div>
+
+        <div class="section-card">
+          <h3>تغيير كلمة المرور</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>كلمة المرور الحالية</label>
+              <input type="password" id="set-old-pw" class="form-input"/>
+            </div>
+            <div class="form-group">
+              <label>كلمة المرور الجديدة</label>
+              <input type="password" id="set-new-pw" class="form-input"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>تأكيد كلمة المرور الجديدة</label>
+            <input type="password" id="set-confirm-pw" class="form-input" style="max-width:300px"/>
+          </div>
+          <button class="btn btn-primary" onclick="changePassword()">🔒 تغيير كلمة المرور</button>
+        </div>
+      </div>
+
+      <!-- ═══ PANEL: REPORTS ════════════════════════ -->
+      <div class="admin-panel" id="panel-reports">
+        <div class="panel-header">
+          <div><h2>📈 التقارير والإحصاءات</h2><p>تحليل شامل لأداء المطعم</p></div>
+          <button class="btn btn-primary" onclick="exportFullReport()">📄 تصدير التقرير الكامل</button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="reports-filter-bar">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
+            <button class="date-range-btn" data-range="today" onclick="setReportsRange('today')">اليوم</button>
+            <button class="date-range-btn" data-range="week" onclick="setReportsRange('week')">هذا الأسبوع</button>
+            <button class="date-range-btn active" data-range="month" onclick="setReportsRange('month')">هذا الشهر</button>
+            <button class="date-range-btn" data-range="year" onclick="setReportsRange('year')">هذه السنة</button>
+            <button class="date-range-btn" data-range="custom" onclick="setReportsRange('custom')">مخصص ▾</button>
+          </div>
+          <select class="filter-select" id="reports-branch-filter" onchange="setReportsBranch(this.value)">
+            <option value="all">كل الفروع</option>
+          </select>
+        </div>
+        <div class="custom-date-range" id="custom-date-bar">
+          <span style="color:var(--gray);font-size:0.85rem">من:</span>
+          <input type="date" id="reports-date-start"/>
+          <span style="color:var(--gray);font-size:0.85rem">إلى:</span>
+          <input type="date" id="reports-date-end"/>
+          <button class="btn btn-primary btn-sm" onclick="applyCustomRange()">تطبيق</button>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="reports-kpi-grid" id="reports-kpi-container"></div>
+
+        <!-- ─ Sales & Revenue ─ -->
+        <div class="charts-section-label">تقارير المبيعات والإيرادات</div>
+        <div class="charts-grid">
+          <div class="chart-card full-width">
+            <div class="chart-card-head">
+              <h3>💹 منحنى الإيرادات عبر الزمن</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-revenue')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-revenue">
+                  <button onclick="exportChartCSV('chart-revenue','revenue.csv',['التاريخ','الإيرادات (ر.س)'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-revenue','منحنى الإيرادات')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-revenue" height="80"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>🕐 المبيعات بالساعة — أوقات الذروة</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-peak')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-peak">
+                  <button onclick="exportChartCSV('chart-peak','peak-hours.csv',['الساعة','عدد الطلبات'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-peak','أوقات الذروة')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-peak"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>🏪 مقارنة المبيعات بين الفروع</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-branch-sales')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-branch-sales">
+                  <button onclick="exportChartCSV('chart-branch-sales','branch-sales.csv',['الفرع','عدد الطلبات'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-branch-sales','مبيعات الفروع')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-branch-sales"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>🏆 أكثر ١٠ أصناف مبيعاً</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-top')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-top">
+                  <button onclick="exportChartCSV('chart-top-items','top-items.csv',['الصنف','الكمية'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-top-items','أكثر الأصناف مبيعاً')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-top-items"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>📉 أقل الأصناف مبيعاً</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-least')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-least">
+                  <button onclick="exportChartCSV('chart-least-items','least-items.csv',['الصنف','الكمية'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-least-items','أقل الأصناف مبيعاً')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-least-items"></canvas></div>
+          </div>
+        </div>
+
+        <!-- ─ Orders ─ -->
+        <div class="charts-section-label">تقارير الطلبات</div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>🍽️ توزيع أنواع الطلبات</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-types')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-types">
+                  <button onclick="exportChartCSV('chart-order-types','order-types.csv',['النوع','العدد'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-order-types','أنواع الطلبات')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-order-types"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>📋 الطلبات حسب الحالة</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-status')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-status">
+                  <button onclick="exportChartCSV('chart-order-status','order-status.csv',['الحالة','العدد'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-order-status','حالات الطلبات')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-order-status"></canvas></div>
+          </div>
+
+          <div class="chart-card full-width">
+            <div class="chart-card-head">
+              <h3>📆 عدد الطلبات اليومي</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-daily')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-daily">
+                  <button onclick="exportChartCSV('chart-daily-orders','daily-orders.csv',['التاريخ','عدد الطلبات'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-daily-orders','الطلبات اليومية')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-daily-orders" height="80"></canvas></div>
+          </div>
+        </div>
+
+        <!-- ─ Reviews ─ -->
+        <div class="charts-section-label">تقارير العملاء والتقييمات</div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>⭐ توزيع التقييمات</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-rdist')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-rdist">
+                  <button onclick="exportChartCSV('chart-rating-dist','ratings.csv',['النجوم','العدد'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-rating-dist','توزيع التقييمات')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-rating-dist"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>👍 الإيجابية مقابل السلبية</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-rpn')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-rpn">
+                  <button onclick="exportChartCSV('chart-rating-posneg','pos-neg.csv',['النوع','العدد'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-rating-posneg','التقييمات الإيجابية والسلبية')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-rating-posneg"></canvas></div>
+          </div>
+        </div>
+
+        <!-- ─ Menu & Branches ─ -->
+        <div class="charts-section-label">أداء المنيو والفروع</div>
+        <div class="charts-grid" style="margin-bottom:32px">
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>🥧 نسبة مبيعات كل فئة</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-cat')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-cat">
+                  <button onclick="exportChartCSV('chart-cat-share','category-share.csv',['الفئة','الكمية'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-cat-share','مبيعات الفئات')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-cat-share"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <h3>💰 مقارنة إيرادات الفروع</h3>
+              <div class="export-btn-wrap">
+                <button class="btn btn-ghost btn-sm" onclick="toggleExportDD('exp-brev')">تصدير ▾</button>
+                <div class="export-dropdown" id="exp-brev">
+                  <button onclick="exportChartCSV('chart-branch-rev','branch-revenue.csv',['الفرع','الإيرادات (ر.س)'])">📊 CSV</button>
+                  <button onclick="exportChartPDF('chart-branch-rev','إيرادات الفروع')">📄 PDF</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap"><canvas id="chart-branch-rev"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-area -->
+</div><!-- /admin-shell -->
+
+<!-- ══ TOAST ══════════════════════════════════════ -->
+<div id="toast-wrap"></div>
+
+<!-- ══ MODAL: MENU ITEM ═══════════════════════════ -->
+<div class="modal-overlay" id="item-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeItemModal()">✕</button>
+    <div class="modal-title" id="item-modal-title">إضافة صنف جديد</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>اسم الصنف *</label>
+        <input type="text" id="item-name" class="form-input" placeholder="مثال: شاورما دجاج"/>
+      </div>
+      <div class="form-group">
+        <label>الفئة *</label>
+        <select id="item-cat" class="form-input"></select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>الوصف</label>
+      <textarea id="item-desc" class="form-input" placeholder="وصف مختصر للصنف..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>السعر (ر.س) *</label>
+        <input type="number" id="item-price" class="form-input" placeholder="0" min="0" step="0.5"/>
+      </div>
+      <div class="form-group" style="display:flex;flex-direction:column;gap:8px">
+        <label>الحالة</label>
+        <div style="display:flex;gap:20px;align-items:center;padding-top:8px">
+          <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="item-available" checked/><span class="toggle-slider"></span></label><span>متاح</span></label>
+          <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="item-featured"/><span class="toggle-slider"></span></label><span>مميز</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>صورة الصنف</label>
+      <input type="file" id="item-img-file" class="form-input" accept="image/*" onchange="previewItemImg(this)"/>
+      <input type="url" id="item-img-url" class="form-input" placeholder="أو أدخل رابط الصورة..." style="margin-top:8px" oninput="previewItemImgUrl(this.value)"/>
+      <img id="item-img-preview" class="img-preview" alt="معاينة"/>
+    </div>
+    <div class="branch-avail-section" id="item-branch-avail-section">
+      <label style="font-size:0.85rem;font-weight:700;color:var(--gray);display:block;margin-bottom:10px">توفر الصنف بالفروع <span style="font-weight:400;color:var(--gray2)">(عدم التحديد = متاح في الكل)</span></label>
+      <div id="item-branch-avail-list"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeItemModal()">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveItem()">💾 حفظ الصنف</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CATEGORIES ══════════════════════════ -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal modal-sm">
+    <button class="modal-close" onclick="document.getElementById('cat-modal').classList.remove('open')">✕</button>
+    <div class="modal-title">إدارة الفئات</div>
+    <div id="cat-list" style="margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="new-cat-input" class="form-input" placeholder="اسم الفئة الجديدة..." style="flex:1"/>
+      <button class="btn btn-primary" onclick="addCategory()">➕ إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: BRANCH ══════════════════════════════ -->
+<div class="modal-overlay" id="branch-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeBranchModal()">✕</button>
+    <div class="modal-title" id="branch-modal-title">إضافة فرع جديد</div>
+    <div class="form-group">
+      <label>اسم الفرع *</label>
+      <input type="text" id="branch-name" class="form-input" placeholder="مثال: الفرع الرئيسي"/>
+    </div>
+    <div class="form-group">
+      <label>العنوان *</label>
+      <input type="text" id="branch-address" class="form-input" placeholder="الرياض، حي العليا"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>ساعات العمل</label>
+        <input type="text" id="branch-hours" class="form-input" placeholder="١٠ ص — ١٢ م يومياً"/>
+      </div>
+      <div class="form-group">
+        <label>رقم الهاتف</label>
+        <input type="text" id="branch-phone" class="form-input" placeholder="0560000000" dir="ltr"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>رابط Google Maps</label>
+      <input type="url" id="branch-maps" class="form-input" placeholder="https://maps.google.com/..." dir="ltr"/>
+    </div>
+    <div class="form-group">
+      <label>رابط Embed للخريطة (iframe src)</label>
+      <input type="url" id="branch-embed" class="form-input" placeholder="https://www.google.com/maps/embed?..." dir="ltr"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>ترتيب العرض</label>
+        <input type="number" id="branch-sort-order" class="form-input" placeholder="1" min="1" max="99"/>
+      </div>
+      <div class="form-group" style="display:flex;flex-direction:column;gap:8px">
+        <label>الحالة</label>
+        <div style="padding-top:8px">
+          <label class="toggle-wrap"><label class="toggle"><input type="checkbox" id="branch-active" checked/><span class="toggle-slider"></span></label><span>فرع نشط</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBranchModal()">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveBranch()">💾 حفظ الفرع</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: DELIVERY PLATFORM ═══════════════════ -->
+<div class="modal-overlay" id="platform-modal">
+  <div class="modal modal-sm">
+    <button class="modal-close" onclick="document.getElementById('platform-modal').classList.remove('open')">✕</button>
+    <div class="modal-title" id="platform-modal-title">إضافة منصة توصيل</div>
+    <div class="form-group">
+      <label>اسم المنصة *</label>
+      <input type="text" id="plat-name" class="form-input" placeholder="مثال: HungerStation"/>
+    </div>
+    <div class="form-group">
+      <label>رابط المطعم على المنصة *</label>
+      <input type="url" id="plat-url" class="form-input" placeholder="https://..." dir="ltr"/>
+    </div>
+    <div class="form-group">
+      <label>أيقونة / إيموجي</label>
+      <input type="text" id="plat-icon" class="form-input" placeholder="🟠 أو رابط صورة الشعار" dir="ltr"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('platform-modal').classList.remove('open')">إلغاء</button>
+      <button class="btn btn-primary" onclick="savePlatform()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CANCEL ORDER ═════════════════════════ -->
+<div class="modal-overlay" id="cancel-modal">
+  <div class="modal modal-sm">
+    <button class="modal-close" onclick="document.getElementById('cancel-modal').classList.remove('open')">✕</button>
+    <div class="modal-title">إلغاء الطلب</div>
+    <div class="form-group">
+      <label>سبب الإلغاء *</label>
+      <textarea id="cancel-reason" class="form-input" placeholder="أدخل سبب إلغاء الطلب..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('cancel-modal').classList.remove('open')">تراجع</button>
+      <button class="btn btn-danger" onclick="confirmCancelOrder()">تأكيد الإلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CONFIRM DELETE ══════════════════════ -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal modal-sm">
+    <button class="modal-close" onclick="document.getElementById('confirm-modal').classList.remove('open')">✕</button>
+    <div class="modal-title" id="confirm-modal-title">تأكيد الحذف</div>
+    <p class="confirm-msg" id="confirm-modal-msg">هل أنت متأكد من هذا الإجراء؟</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('confirm-modal').classList.remove('open')">إلغاء</button>
+      <button class="btn btn-danger" id="confirm-modal-ok" onclick="">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: EDIT REVIEW ══════════════════════════ -->
+<div class="modal-overlay" id="review-edit-modal">
+  <div class="modal modal-sm">
+    <button class="modal-close" onclick="document.getElementById('review-edit-modal').classList.remove('open')">✕</button>
+    <div class="modal-title">تعديل التقييم</div>
+    <div class="form-group">
+      <label>اسم العميل</label>
+      <input type="text" id="rev-edit-name" class="form-input"/>
+    </div>
+    <div class="form-group">
+      <label>التقييم</label>
+      <div class="stars-input" id="rev-edit-stars">
+        <span onclick="setRevStars(5)">★</span><span onclick="setRevStars(4)">★</span>
+        <span onclick="setRevStars(3)">★</span><span onclick="setRevStars(2)">★</span><span onclick="setRevStars(1)">★</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>التعليق</label>
+      <textarea id="rev-edit-comment" class="form-input"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('review-edit-modal').classList.remove('open')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveReviewEdit()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════
+   DATA HELPERS
+════════════════════════════════════════════ */
+const LS = {
+  get:(k,d=[])=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){return d;} },
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
+  str:(k,d='')=>localStorage.getItem(k)||d,
+  setStr:(k,v)=>localStorage.setItem(k,v),
+};
+
+/* ════════════════════════════════════════════
+   AUTH
+════════════════════════════════════════════ */
+function getAdminPassword(){ return LS.str('alfAwafi_adminPassword','admin123'); }
+
+function doLogin(){
+  const pw = document.getElementById('login-pw').value;
+  const err = document.getElementById('login-error');
+  if(!pw){ err.textContent='أدخل كلمة المرور'; return; }
+  if(pw !== getAdminPassword()){ err.textContent='كلمة المرور غير صحيحة'; return; }
+  sessionStorage.setItem('adminLoggedIn','1');
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('admin-shell').classList.add('visible');
+  initAdmin();
+}
+
+function doLogout(){
+  sessionStorage.removeItem('adminLoggedIn');
+  location.reload();
+}
+
+function checkAuth(){
+  if(sessionStorage.getItem('adminLoggedIn')==='1'){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('admin-shell').classList.add('visible');
+    initAdmin();
+  }
+}
+
+/* ════════════════════════════════════════════
+   ROUTING
+════════════════════════════════════════════ */
+let currentPanel='overview';
+const PANELS=['overview','menu','orders','reviews','branches','order-settings','reports','settings'];
+
+function goPanel(p){
+  if(!PANELS.includes(p)) p='overview';
+  document.querySelectorAll('.admin-panel').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('[data-panel]').forEach(a=>a.classList.toggle('active',a.dataset.panel===p));
+  document.getElementById('panel-'+p).classList.add('active');
+  currentPanel=p;
+  location.hash='admin/'+p;
+  closeSidebar();
+  loadPanel(p);
+}
+
+function loadPanel(p){
+  if(p==='overview')       renderOverview();
+  if(p==='menu')           renderMenuTable();
+  if(p==='orders')         renderOrdersTable();
+  if(p==='reviews')        renderReviews();
+  if(p==='branches')       renderBranches();
+  if(p==='order-settings') renderOrderSettings();
+  if(p==='reports')        renderReports();
+  if(p==='settings')       loadSettings();
+}
+
+function handleHash(){
+  const h=location.hash.replace('#','');
+  if(h.startsWith('admin/')){
+    const p=h.replace('admin/','');
+    if(PANELS.includes(p)) goPanel(p);
+  } else {
+    goPanel('overview');
+  }
+}
+
+/* ════════════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════════════ */
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+/* ════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════ */
+function toast(msg,type='success'){
+  const w=document.getElementById('toast-wrap');
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  t.textContent=msg;
+  w.appendChild(t);
+  setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(),300); },3000);
+}
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+function initAdmin(){
+  seedMenuItems();
+  seedBranches();
+  seedPlatforms();
+  seedDemoOrders();
+  updateBadges();
+  handleHash();
+  window.addEventListener('hashchange',handleHash);
+  // Poll for new orders every 30s
+  setInterval(()=>{ updateBadges(); if(currentPanel==='overview') renderOverview(); },30000);
+}
+
+function updateBadges(){
+  const orders=LS.get('alfAwafi_orders');
+  const newCount=orders.filter(o=>o.status==='new').length;
+  const nb=document.getElementById('new-orders-badge');
+  nb.style.display=newCount?'inline':'none';
+  nb.textContent=newCount;
+
+  const pending=LS.get('alfAwafi_pendingReviews');
+  const pc=document.getElementById('pending-reviews-badge');
+  pc.style.display=pending.length?'inline':'none';
+  pc.textContent=pending.length;
+  document.getElementById('pending-count-badge').textContent=pending.length;
+}
+
+/* ════════════════════════════════════════════
+   SEED DATA
+════════════════════════════════════════════ */
+const DEFAULT_MENU = [
+  {id:1,cat:'شاورما',name:'شاورما دجاج',desc:'شاورما دجاج بالصوص الخاص والخضار الطازجة',price:18,featured:true,available:true},
+  {id:2,cat:'شاورما',name:'شاورما لحم',desc:'لحم مشوي بالتوابل الشامية وصوص الثوم',price:22,featured:true,available:true},
+  {id:3,cat:'شاورما',name:'شاورما مشكلة',desc:'مزيج دجاج ولحم بالصوصين معاً',price:24,featured:false,available:true},
+  {id:4,cat:'شاورما',name:'ثلاثي الشاورما',desc:'ثلاث شاورمات صغيرة متنوعة',price:35,featured:true,available:true},
+  {id:5,cat:'فلافل',name:'فلافل عادية',desc:'فلافل مقلية طازجة بالتوابل الأصيلة',price:8,featured:false,available:true},
+  {id:6,cat:'فلافل',name:'فلافل مع بيض',desc:'فلافل مقلية طازجة مع بيض مقلي',price:13,featured:false,available:true},
+  {id:7,cat:'فلافل',name:'ساندويش فلافل',desc:'خبز محشو بالفلافل والخضار والطحينة',price:8,featured:false,available:true},
+  {id:8,cat:'بيتزا',name:'بيتزا مارغريتا',desc:'صوص طماطم، جبن موزاريلا طازج',price:25,featured:false,available:true},
+  {id:9,cat:'بيتزا',name:'بيتزا دجاج',desc:'دجاج مشوي، فلفل ملون، جبن ذهبي',price:30,featured:false,available:true},
+  {id:10,cat:'بيتزا',name:'بيتزا لحم',desc:'لحم مفروم، بصل، طماطم، جبن فاخر',price:35,featured:false,available:true},
+  {id:11,cat:'بيتزا',name:'بيتزا مشكلة',desc:'خليط فاخر من الدجاج واللحم والخضار',price:38,featured:false,available:true},
+  {id:12,cat:'فطائر',name:'فطيرة جبن',desc:'جبن ذوب ناعم بعجينة محلية طازجة',price:10,featured:false,available:true},
+  {id:13,cat:'فطائر',name:'فطيرة زعتر',desc:'زعتر بزيت الزيتون على عجينة ذهبية',price:8,featured:false,available:true},
+  {id:14,cat:'فطائر',name:'فطيرة لحم',desc:'لحم مفروم متبل بعجينة طازجة',price:12,featured:false,available:true},
+  {id:15,cat:'فطائر',name:'فطيرة مشكلة',desc:'جبن وزيتون ولحم — كل شيء في لقمة',price:14,featured:false,available:true},
+  {id:16,cat:'بروستد',name:'وجبة بروستد فردية',desc:'٤ قطع دجاج مقرمش مع بطاطس وصوص',price:25,featured:true,available:true},
+  {id:17,cat:'بروستد',name:'وجبة بروستد عائلية',desc:'١٦ قطعة دجاج + أرز + بطاطس + مشروب',price:65,featured:false,available:true},
+  {id:18,cat:'بروستد',name:'بروستد بالصوص الحار',desc:'مقرمش ومتبل بصوص حار مميز',price:28,featured:false,available:true},
+  {id:19,cat:'مشروبات',name:'عصير برتقال طازج',desc:'عصير برتقال معصور طازج أمامك',price:8,featured:false,available:true},
+  {id:20,cat:'مشروبات',name:'ليمون بالنعنع',desc:'ليمون طازج مع نعنع وثلج',price:10,featured:false,available:true},
+  {id:21,cat:'مشروبات',name:'كولا',desc:'مشروب غازي بارد',price:5,featured:false,available:true},
+  {id:22,cat:'مشروبات',name:'ماء معدني',desc:'ماء معدني بارد',price:3,featured:false,available:true},
+  {id:23,cat:'إضافات',name:'صوص حار',desc:'صوص حار مميز من تحضيرنا',price:2,featured:false,available:true},
+  {id:24,cat:'إضافات',name:'خبز إضافي',desc:'خبز طازج مخبوز لحظياً',price:3,featured:false,available:true},
+  {id:25,cat:'إضافات',name:'بطاطس',desc:'بطاطس مقلية مقرمشة',price:8,featured:false,available:true},
+];
+
+function seedMenuItems(){
+  if(!localStorage.getItem('alfAwafi_menuItems')){
+    LS.set('alfAwafi_menuItems', DEFAULT_MENU);
+  }
+  if(!localStorage.getItem('alfAwafi_menuCategories')){
+    const cats=[...new Set(DEFAULT_MENU.map(i=>i.cat))];
+    LS.set('alfAwafi_menuCategories', cats);
+  }
+}
+
+function seedBranches(){
+  if(!localStorage.getItem('alfAwafi_branches')){
+    LS.set('alfAwafi_branches',[
+      {id:1,name:'الفرع الرئيسي',address:'الرياض، المملكة العربية السعودية',hours:'١٠ ص — ١٢ م يومياً',phone:'966560670698',mapsUrl:'https://www.google.com/maps/place/Alf+Awafi/@24.6656666,46.5797713,12z',embedUrl:'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d57774.46!2d46.5797713!3d24.6656666!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e2f1f7c19988bed%3A0xa207c761857ac536!2sAlf%20Awafi!5e0!3m2!1sar!2ssa!4v1',active:true,sortOrder:1},
+      {id:2,name:'الفرع الثاني',address:'الرياض، المملكة العربية السعودية',hours:'١٠ ص — ١٢ م يومياً',phone:'966560670698',mapsUrl:'https://maps.app.goo.gl/bjSKTWSR13zg4RRi8',embedUrl:'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3623.9!2d46.72!3d24.68!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjTCsDQwJzQ4LjUiTiA0NsKwNDMnMTIuMCJF!5e0!3m2!1sar!2ssa!4v1',active:true,sortOrder:2},
+    ]);
+  } else {
+    // Migration: add active/sortOrder to existing branches that lack them
+    const bs=LS.get('alfAwafi_branches');
+    let changed=false;
+    bs.forEach((b,i)=>{
+      if(b.active===undefined){ b.active=true; changed=true; }
+      if(b.sortOrder===undefined){ b.sortOrder=i+1; changed=true; }
+    });
+    if(changed) LS.set('alfAwafi_branches',bs);
+  }
+}
+
+function seedPlatforms(){
+  if(!localStorage.getItem('alfAwafi_deliveryPlatforms')){
+    LS.set('alfAwafi_deliveryPlatforms',[
+      {id:1,name:'HungerStation',url:'https://hungerstation.com/sa-ar/restaurant/alf-awafi',icon:'🟠',enabled:true},
+      {id:2,name:'Jahez — جاهز',url:'https://jahez.net/restaurant/alf-awafi',icon:'🔵',enabled:true},
+    ]);
+  }
+}
+
+/* ════════════════════════════════════════════
+   OVERVIEW
+════════════════════════════════════════════ */
+function renderOverview(){
+  const orders=LS.get('alfAwafi_orders');
+  const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const todayOrders=orders.filter(o=>o.orderId&&o.orderId.includes('-'+today+'-'));
+  const revenue=todayOrders.reduce((s,o)=>s+(parseFloat(o.total)||0),0);
+  const avg=todayOrders.length?revenue/todayOrders.length:0;
+  const active=orders.filter(o=>['new','preparing'].includes(o.status)).length;
+
+  document.getElementById('kpi-grid').innerHTML=`
+    <div class="kpi-card red"><div class="kpi-icon">📦</div><div class="kpi-label">إجمالي الطلبات اليوم</div><div class="kpi-value">${todayOrders.length}</div><div class="kpi-sub">طلب</div></div>
+    <div class="kpi-card orange"><div class="kpi-icon">💰</div><div class="kpi-label">إيرادات اليوم</div><div class="kpi-value">${revenue.toFixed(0)}</div><div class="kpi-sub">ر.س</div></div>
+    <div class="kpi-card yellow"><div class="kpi-icon">📊</div><div class="kpi-label">متوسط قيمة الطلب</div><div class="kpi-value">${avg.toFixed(0)}</div><div class="kpi-sub">ر.س</div></div>
+    <div class="kpi-card green"><div class="kpi-icon">⏳</div><div class="kpi-label">طلبات قيد التنفيذ</div><div class="kpi-value">${active}</div><div class="kpi-sub">طلب نشط</div></div>
+  `;
+
+  const recent=orders.slice(0,10);
+  const tbody=document.getElementById('recent-orders-body');
+  if(!recent.length){
+    tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">📋</div><p>لا توجد طلبات بعد</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=recent.map(o=>`
+    <tr>
+      <td><span style="font-family:monospace;font-size:0.78rem;color:var(--orange)">${escH(o.orderId||'-')}</span></td>
+      <td>${escH(o.customerName||'-')}</td>
+      <td>${orderTypeLabel(o.orderType)}</td>
+      <td style="font-weight:700;color:var(--yellow)">${parseFloat(o.total||0).toFixed(2)} ر.س</td>
+      <td>${statusBadge(o.status)}</td>
+      <td class="cell-muted">${fmtTime(o.createdAt)}</td>
+    </tr>`).join('');
+}
+
+function refreshOverview(){ renderOverview(); toast('تم تحديث البيانات'); }
+
+/* ════════════════════════════════════════════
+   MENU MANAGEMENT
+════════════════════════════════════════════ */
+function getMenuItems(){ return LS.get('alfAwafi_menuItems'); }
+function saveMenuItems(items){ LS.set('alfAwafi_menuItems',items); }
+function getCategories(){ return LS.get('alfAwafi_menuCategories',[]); }
+function saveCategories(cats){ LS.set('alfAwafi_menuCategories',cats); }
+
+function renderMenuTable(){
+  const items=getMenuItems();
+  const q=(document.getElementById('menu-search-admin')||{value:''}).value.toLowerCase();
+  const catF=(document.getElementById('menu-cat-filter')||{value:'all'}).value;
+  const branchF=(document.getElementById('menu-branch-filter')||{value:'all'}).value;
+  const cats=getCategories();
+  const branches=LS.get('alfAwafi_branches');
+
+  // Populate cat filter
+  const sel=document.getElementById('menu-cat-filter');
+  if(sel){
+    const cur=sel.value;
+    sel.innerHTML=`<option value="all">كل الفئات</option>`+cats.map(c=>`<option value="${escH(c)}"${c===cur?' selected':''}>${escH(c)}</option>`).join('');
+  }
+  // Populate branch filter
+  const bsel=document.getElementById('menu-branch-filter');
+  if(bsel){
+    const cur=bsel.value;
+    bsel.innerHTML=`<option value="all">كل الفروع</option>`+branches.map(b=>`<option value="${escH(b.name)}"${b.name===cur?' selected':''}>${escH(b.name)}</option>`).join('');
+  }
+
+  const filtered=items.filter(i=>{
+    const matchQ=!q||i.name.includes(q)||(i.desc||'').includes(q);
+    const matchC=catF==='all'||i.cat===catF;
+    const matchB=branchF==='all'||!i.branchAvailability||i.branchAvailability.length===0||i.branchAvailability.includes(branchF);
+    return matchQ&&matchC&&matchB;
+  });
+
+  const tbody=document.getElementById('menu-table-body');
+  if(!filtered.length){
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><p>لا توجد نتائج</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=filtered.map(item=>{
+    const avail=item.branchAvailability&&item.branchAvailability.length>0
+      ? item.branchAvailability.map(n=>`<span class="branch-avail-pill">📍${escH(n)}</span>`).join('')
+      : `<span style="color:var(--gray2);font-size:0.75rem">الكل</span>`;
+    return `
+    <tr>
+      <td>${item.image?`<img src="${escH(item.image)}" class="thumb" onerror="this.style.display='none'">`:`<div class="thumb-placeholder">🍽️</div>`}</td>
+      <td><div style="font-weight:700">${escH(item.name)}</div><div class="cell-muted">${escH(item.desc||'').substring(0,40)}${(item.desc||'').length>40?'...':''}</div></td>
+      <td><span class="badge badge-prep">${escH(item.cat)}</span></td>
+      <td style="font-weight:700;color:var(--yellow)">${parseFloat(item.price).toFixed(2)} ر.س</td>
+      <td>
+        <label class="toggle" title="${item.available?'متاح':'غير متاح'}">
+          <input type="checkbox" ${item.available?'checked':''} onchange="toggleItemAvail(${item.id},this.checked)"/>
+          <span class="toggle-slider"></span>
+        </label>
+      </td>
+      <td>${item.featured?'<span style="color:var(--yellow)">★ مميز</span>':'<span style="color:var(--gray2)">—</span>'}</td>
+      <td class="branch-avail-col">${avail}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="openItemModal(${item.id})" title="تعديل">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteItem(${item.id})" title="حذف">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleItemAvail(id,val){
+  const items=getMenuItems();
+  const i=items.find(x=>x.id===id);
+  if(i){ i.available=val; saveMenuItems(items); toast(val?'الصنف متاح الآن':'الصنف غير متاح الآن'); }
+}
+
+/* Item Modal */
+let editingItemId=null;
+let itemImgData='';
+
+function openItemModal(id=null){
+  editingItemId=id;
+  itemImgData='';
+  const cats=getCategories();
+  document.getElementById('item-cat').innerHTML=cats.map(c=>`<option value="${escH(c)}">${escH(c)}</option>`).join('');
+  document.getElementById('item-modal-title').textContent=id?'تعديل الصنف':'إضافة صنف جديد';
+
+  if(id){
+    const item=getMenuItems().find(x=>x.id===id);
+    if(!item) return;
+    document.getElementById('item-name').value=item.name||'';
+    document.getElementById('item-desc').value=item.desc||'';
+    document.getElementById('item-price').value=item.price||'';
+    document.getElementById('item-cat').value=item.cat||cats[0]||'';
+    document.getElementById('item-available').checked=item.available!==false;
+    document.getElementById('item-featured').checked=!!item.featured;
+    document.getElementById('item-img-url').value='';
+    const prev=document.getElementById('item-img-preview');
+    if(item.image){ prev.src=item.image; prev.style.display='block'; itemImgData=item.image; }
+    else{ prev.style.display='none'; itemImgData=''; }
+  } else {
+    document.getElementById('item-name').value='';
+    document.getElementById('item-desc').value='';
+    document.getElementById('item-price').value='';
+    document.getElementById('item-cat').value=cats[0]||'';
+    document.getElementById('item-available').checked=true;
+    document.getElementById('item-featured').checked=false;
+    document.getElementById('item-img-url').value='';
+    document.getElementById('item-img-preview').style.display='none';
+  }
+  document.getElementById('item-img-file').value='';
+  // Populate branch availability checkboxes
+  const branches=LS.get('alfAwafi_branches');
+  const curAvail=(id && getMenuItems().find(x=>x.id===id)||{}).branchAvailability||[];
+  document.getElementById('item-branch-avail-list').innerHTML=branches.length
+    ? branches.map(b=>`
+        <div class="branch-avail-row">
+          <span>${escH(b.name)}</span>
+          <label class="toggle-wrap">
+            <label class="toggle"><input type="checkbox" id="branch-avail-${b.id}" value="${escH(b.name)}" ${curAvail.length===0||curAvail.includes(b.name)?'checked':''}/><span class="toggle-slider"></span></label>
+          </label>
+        </div>`).join('')
+    : '<p style="color:var(--gray);font-size:0.82rem">لا توجد فروع محددة</p>';
+  document.getElementById('item-modal').classList.add('open');
+}
+
+function closeItemModal(){ document.getElementById('item-modal').classList.remove('open'); }
+
+function previewItemImg(input){
+  const f=input.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    itemImgData=e.target.result;
+    const p=document.getElementById('item-img-preview');
+    p.src=itemImgData; p.style.display='block';
+  };
+  r.readAsDataURL(f);
+}
+
+function previewItemImgUrl(url){
+  if(!url) return;
+  itemImgData=url;
+  const p=document.getElementById('item-img-preview');
+  p.src=url; p.style.display='block';
+}
+
+function saveItem(){
+  const name=document.getElementById('item-name').value.trim();
+  const price=parseFloat(document.getElementById('item-price').value);
+  const cat=document.getElementById('item-cat').value;
+  if(!name||isNaN(price)||!cat){ toast('يرجى ملء جميع الحقول المطلوبة','error'); return; }
+
+  // Collect branch availability (empty array = available everywhere)
+  const branches=LS.get('alfAwafi_branches');
+  const allChecked=branches.every(b=>{
+    const cb=document.getElementById('branch-avail-'+b.id);
+    return !cb||cb.checked;
+  });
+  const branchAvailability=allChecked?[]:branches
+    .filter(b=>{ const cb=document.getElementById('branch-avail-'+b.id); return cb&&cb.checked; })
+    .map(b=>b.name);
+
+  const items=getMenuItems();
+  if(editingItemId){
+    const idx=items.findIndex(x=>x.id===editingItemId);
+    if(idx>-1){
+      items[idx]={...items[idx],name,desc:document.getElementById('item-desc').value.trim(),price,cat,
+        available:document.getElementById('item-available').checked,
+        featured:document.getElementById('item-featured').checked,
+        image:itemImgData||items[idx].image||'',
+        branchAvailability};
+    }
+    toast('✅ تم تحديث الصنف بنجاح');
+  } else {
+    const newId=Date.now();
+    items.push({id:newId,name,desc:document.getElementById('item-desc').value.trim(),
+      price,cat,available:document.getElementById('item-available').checked,
+      featured:document.getElementById('item-featured').checked,image:itemImgData||'',
+      branchAvailability});
+    toast('✅ تم إضافة الصنف بنجاح');
+  }
+  saveMenuItems(items);
+  closeItemModal();
+  renderMenuTable();
+}
+
+function deleteItem(id){
+  const item=getMenuItems().find(x=>x.id===id);
+  showConfirm(`حذف الصنف "${item?item.name:''}"`,'سيتم حذف هذا الصنف نهائياً. هل أنت متأكد؟',()=>{
+    saveMenuItems(getMenuItems().filter(x=>x.id!==id));
+    renderMenuTable();
+    toast('تم حذف الصنف');
+  });
+}
+
+/* Category Modal */
+function openCatModal(){
+  renderCatList();
+  document.getElementById('cat-modal').classList.add('open');
+}
+
+function renderCatList(){
+  const cats=getCategories();
+  document.getElementById('cat-list').innerHTML=cats.length
+    ? cats.map((c,i)=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px">
+          <span style="flex:1;font-size:0.88rem">${escH(c)}</span>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCat(${i})">🗑️</button>
+        </div>`).join('')
+    : '<p style="color:var(--gray);font-size:0.85rem">لا توجد فئات بعد</p>';
+}
+
+function addCategory(){
+  const inp=document.getElementById('new-cat-input');
+  const v=inp.value.trim();
+  if(!v){ toast('أدخل اسم الفئة','error'); return; }
+  const cats=getCategories();
+  if(cats.includes(v)){ toast('الفئة موجودة مسبقاً','error'); return; }
+  cats.push(v); saveCategories(cats);
+  inp.value='';
+  renderCatList();
+  renderMenuTable();
+  toast('✅ تمت إضافة الفئة');
+}
+
+function deleteCat(idx){
+  const cats=getCategories();
+  cats.splice(idx,1); saveCategories(cats);
+  renderCatList(); renderMenuTable();
+  toast('تم حذف الفئة');
+}
+
+/* ════════════════════════════════════════════
+   ORDERS
+════════════════════════════════════════════ */
+let orderStatusFilter='all';
+let orderBranchFilter='all';
+let cancelTargetId=null;
+
+function setOrderTab(btn,status){
+  orderStatusFilter=status;
+  document.querySelectorAll('#orders-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrdersTable();
+}
+
+function renderOrdersTable(){
+  const allOrders=LS.get('alfAwafi_orders');
+  let orders=allOrders;
+  const q=(document.getElementById('orders-search')||{value:''}).value.toLowerCase();
+
+  // Populate branch filter dropdown
+  const branchSel=document.getElementById('orders-branch-filter');
+  if(branchSel){
+    const branches=LS.get('alfAwafi_branches');
+    const cur=branchSel.value||'all';
+    branchSel.innerHTML=`<option value="all">كل الفروع</option>`+
+      branches.map(b=>`<option value="${escH(b.name)}"${b.name===cur?' selected':''}>${escH(b.name)}</option>`).join('');
+  }
+
+  // Update tab badge counts
+  const statusCounts={all:allOrders.length,new:0,preparing:0,ready:0,completed:0,cancelled:0};
+  allOrders.forEach(o=>{ if(statusCounts[o.status]!==undefined) statusCounts[o.status]++; });
+  document.querySelectorAll('#orders-tabs .tab-btn').forEach(btn=>{
+    const s=btn.dataset.status;
+    const existing=btn.querySelector('.tab-badge');
+    if(statusCounts[s]>0){
+      if(existing){ existing.textContent=statusCounts[s]; }
+      else { btn.insertAdjacentHTML('beforeend',`<span class="tab-badge">${statusCounts[s]}</span>`); }
+    } else { if(existing) existing.remove(); }
+  });
+
+  if(orderStatusFilter!=='all') orders=orders.filter(o=>o.status===orderStatusFilter);
+  if(orderBranchFilter!=='all') orders=orders.filter(o=>(o.branch||'')=== orderBranchFilter);
+  if(q) orders=orders.filter(o=>
+    (o.orderId||'').toLowerCase().includes(q)||
+    (o.customerName||'').toLowerCase().includes(q)||
+    (o.phone||'').includes(q)
+  );
+
+  const tbody=document.getElementById('orders-table-body');
+  if(!orders.length){
+    tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div><p>لا توجد طلبات</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=orders.map(o=>`
+    <tr id="order-row-${o.orderId}">
+      <td><button class="btn btn-ghost btn-sm btn-icon" onclick="toggleOrderDetail('${escH(o.orderId)}')">▼</button></td>
+      <td><span style="font-family:monospace;font-size:0.78rem;color:var(--orange)">${escH(o.orderId||'-')}</span></td>
+      <td style="font-weight:600">${escH(o.customerName||'-')}</td>
+      <td dir="ltr" class="cell-muted">${escH(o.phone||'-')}</td>
+      <td class="cell-muted" style="font-size:0.8rem">${escH(o.branch||'—')}</td>
+      <td>${orderTypeLabel(o.orderType)}</td>
+      <td style="font-weight:700;color:var(--yellow)">${parseFloat(o.total||0).toFixed(2)} ر.س</td>
+      <td>${statusBadge(o.status)}</td>
+      <td class="cell-muted" style="white-space:nowrap">${fmtTime(o.createdAt)}</td>
+      <td>${orderStatusActions(o)}</td>
+    </tr>
+    <tr class="order-detail-row" id="detail-${o.orderId}" style="display:none">
+      <td colspan="10">
+        <div class="order-detail-inner">
+          <div class="order-items-list">${(o.items||[]).map(i=>`<span class="order-item-tag">${escH(i.name)} ×${i.qty}</span>`).join('')}</div>
+          ${o.orderType==='dine-in'?`<div style="font-size:0.82rem;color:var(--gray)">🪑 رقم الطاولة: <strong style="color:var(--white)">${escH(String(o.tableNumber||'-'))}</strong></div>`:''}
+          ${o.orderType==='delivery'?`<div style="font-size:0.82rem;color:var(--gray)">📍 العنوان: <strong style="color:var(--white)">${escH(o.deliveryAddress||'-')}</strong></div>`:''}
+          ${o.notes?`<div style="font-size:0.82rem;color:var(--gray);margin-top:6px">📝 ملاحظة: ${escH(o.notes)}</div>`:''}
+          ${o.cancelReason?`<div style="font-size:0.82rem;color:var(--red);margin-top:6px">❌ سبب الإلغاء: ${escH(o.cancelReason)}</div>`:''}
+          <div class="order-history">${buildStatusHistory(o.statusHistory)}</div>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function setOrderBranchFilter(val){
+  orderBranchFilter=val;
+  renderOrdersTable();
+}
+
+function toggleOrderDetail(id){
+  const row=document.getElementById('detail-'+id);
+  if(!row) return;
+  row.style.display=row.style.display==='none'?'table-row':'none';
+}
+
+function buildStatusHistory(history){
+  if(!history||!history.length) return '';
+  return '<div style="margin-top:8px"><strong style="color:var(--gray)">سجل الحالات:</strong><br/>'+
+    history.map(h=>`<span style="color:var(--gray)">• ${statusLabel(h.status)} — <span style="color:var(--orange)">${fmtTime(h.at)}</span></span>`).join('<br/>')+'</div>';
+}
+
+function orderStatusActions(o){
+  const allStatuses=['new','preparing','ready','completed','cancelled'];
+  const selectHtml=`<select class="order-status-select" onchange="setOrderStatus('${escH(o.orderId)}',this.value)">
+    ${allStatuses.map(s=>`<option value="${s}"${o.status===s?' selected':''}>${statusLabel(s)}</option>`).join('')}
+  </select>`;
+  const next=nextStatus(o.status);
+  const quickBtn=next?`<button class="btn btn-green btn-sm" onclick="advanceOrder('${escH(o.orderId)}')">⟵ ${statusLabel(next)}</button>`:'';
+  const cancelBtn=(o.status!=='completed'&&o.status!=='cancelled')
+    ?`<button class="btn btn-danger btn-sm" onclick="openCancelOrder('${escH(o.orderId)}')">إلغاء</button>`:'';
+  return `<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+    ${selectHtml}${quickBtn}${cancelBtn}
+  </div>`;
+}
+
+function setOrderStatus(id,newStatus){
+  if(newStatus==='cancelled'){
+    // use the cancel modal so reason is captured
+    cancelTargetId=id;
+    document.getElementById('cancel-reason').value='';
+    document.getElementById('cancel-modal').classList.add('open');
+    // reset the select back to current value
+    setTimeout(renderOrdersTable,0);
+    return;
+  }
+  const orders=LS.get('alfAwafi_orders');
+  const o=orders.find(x=>x.orderId===id);
+  if(!o||o.status===newStatus) return;
+  o.status=newStatus;
+  if(!o.statusHistory) o.statusHistory=[];
+  o.statusHistory.push({status:newStatus,at:new Date().toISOString()});
+  LS.set('alfAwafi_orders',orders);
+  renderOrdersTable();
+  updateBadges();
+  toast(`✅ ${id} — ${statusLabel(newStatus)}`);
+}
+
+function nextStatus(s){
+  const map={new:'preparing',preparing:'ready',ready:'completed'};
+  return map[s]||null;
+}
+
+function advanceOrder(id){
+  const orders=LS.get('alfAwafi_orders');
+  const o=orders.find(x=>x.orderId===id);
+  if(!o) return;
+  const ns=nextStatus(o.status);
+  if(!ns) return;
+  o.status=ns;
+  if(!o.statusHistory) o.statusHistory=[];
+  o.statusHistory.push({status:ns,at:new Date().toISOString()});
+  LS.set('alfAwafi_orders',orders);
+  renderOrdersTable();
+  updateBadges();
+  toast(`✅ الطلب ${id} — ${statusLabel(ns)}`);
+}
+
+function openCancelOrder(id){
+  cancelTargetId=id;
+  document.getElementById('cancel-reason').value='';
+  document.getElementById('cancel-modal').classList.add('open');
+}
+
+function confirmCancelOrder(){
+  const reason=document.getElementById('cancel-reason').value.trim();
+  if(!reason){ toast('أدخل سبب الإلغاء','error'); return; }
+  const orders=LS.get('alfAwafi_orders');
+  const o=orders.find(x=>x.orderId===cancelTargetId);
+  if(!o){ document.getElementById('cancel-modal').classList.remove('open'); return; }
+  o.status='cancelled';
+  o.cancelReason=reason;
+  if(!o.statusHistory) o.statusHistory=[];
+  o.statusHistory.push({status:'cancelled',at:new Date().toISOString()});
+  LS.set('alfAwafi_orders',orders);
+  document.getElementById('cancel-modal').classList.remove('open');
+  renderOrdersTable();
+  updateBadges();
+  toast('تم إلغاء الطلب');
+}
+
+/* ════════════════════════════════════════════
+   REVIEWS
+════════════════════════════════════════════ */
+let revTab='pending';
+let editingRevKey=null;
+let editingRevIdx=null;
+let editRevStars=5;
+
+function setRevTab(tab){
+  revTab=tab;
+  ['pending','approved','rejected'].forEach(t=>{
+    document.getElementById('rev-tab-'+t).classList.toggle('active',t===tab);
+  });
+  renderReviews();
+}
+
+function renderReviews(){
+  let items=[];
+  if(revTab==='pending') items=LS.get('alfAwafi_pendingReviews');
+  else if(revTab==='approved') items=LS.get('alfAwafi_approvedReviews');
+  else items=LS.get('alfAwafi_rejectedReviews',[]);
+
+  const c=document.getElementById('reviews-container');
+  if(!items.length){
+    c.innerHTML=`<div class="empty-state"><div class="empty-icon">⭐</div><p>لا توجد تقييمات ${revTab==='pending'?'معلقة':revTab==='approved'?'معتمدة':'مرفوضة'}</p></div>`;
+    return;
+  }
+  c.innerHTML=items.map((r,i)=>`
+    <div class="review-card">
+      <div class="review-card-head">
+        <div>
+          <div class="review-name">${escH(r.name||'مجهول')}</div>
+          <div class="review-stars">${'★'.repeat(r.rating||5)}${'☆'.repeat(5-(r.rating||5))}</div>
+        </div>
+        <div class="review-date">${escH(r.date||'')}</div>
+      </div>
+      <div class="review-comment">${escH(r.comment||'')}</div>
+      <div class="review-actions">
+        ${revTab==='pending'?`
+          <button class="btn btn-green btn-sm" onclick="approveReview(${i})">✅ موافقة</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectReview(${i})">❌ رفض</button>
+        `:''}
+        ${revTab==='approved'?`
+          <button class="btn btn-danger btn-sm" onclick="unapproveReview(${i})">↩️ إلغاء الموافقة</button>
+        `:''}
+        ${revTab==='rejected'?`
+          <button class="btn btn-green btn-sm" onclick="restoreReview(${i})">↩️ استعادة</button>
+        `:''}
+        <button class="btn btn-ghost btn-sm" onclick="openReviewEdit('${revTab}',${i})">✏️ تعديل</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteReview('${revTab}',${i})">🗑️ حذف</button>
+      </div>
+    </div>`).join('');
+}
+
+function approveReview(i){
+  const pending=LS.get('alfAwafi_pendingReviews');
+  const rev=pending.splice(i,1)[0];
+  LS.set('alfAwafi_pendingReviews',pending);
+  const approved=LS.get('alfAwafi_approvedReviews');
+  approved.unshift(rev);
+  LS.set('alfAwafi_approvedReviews',approved);
+  updateBadges(); renderReviews(); toast('✅ تمت الموافقة على التقييم');
+}
+
+function rejectReview(i){
+  const pending=LS.get('alfAwafi_pendingReviews');
+  const rev=pending.splice(i,1)[0];
+  LS.set('alfAwafi_pendingReviews',pending);
+  const rejected=LS.get('alfAwafi_rejectedReviews',[]);
+  rejected.unshift(rev);
+  LS.set('alfAwafi_rejectedReviews',rejected);
+  updateBadges(); renderReviews(); toast('تم رفض التقييم');
+}
+
+function unapproveReview(i){
+  const approved=LS.get('alfAwafi_approvedReviews');
+  const rev=approved.splice(i,1)[0];
+  LS.set('alfAwafi_approvedReviews',approved);
+  const pending=LS.get('alfAwafi_pendingReviews');
+  pending.unshift(rev);
+  LS.set('alfAwafi_pendingReviews',pending);
+  updateBadges(); renderReviews(); toast('↩️ نُقل التقييم للمعلق');
+}
+
+function restoreReview(i){
+  const rejected=LS.get('alfAwafi_rejectedReviews',[]);
+  const rev=rejected.splice(i,1)[0];
+  LS.set('alfAwafi_rejectedReviews',rejected);
+  const approved=LS.get('alfAwafi_approvedReviews');
+  approved.unshift(rev);
+  LS.set('alfAwafi_approvedReviews',approved);
+  renderReviews(); toast('✅ تمت استعادة التقييم');
+}
+
+function deleteReview(tab,i){
+  const keyMap={pending:'alfAwafi_pendingReviews',approved:'alfAwafi_approvedReviews',rejected:'alfAwafi_rejectedReviews'};
+  showConfirm('حذف التقييم','سيتم حذف هذا التقييم نهائياً.',()=>{
+    const items=LS.get(keyMap[tab],[]);
+    items.splice(i,1);
+    LS.set(keyMap[tab],items);
+    updateBadges(); renderReviews(); toast('تم حذف التقييم');
+  });
+}
+
+function openReviewEdit(tab,i){
+  const keyMap={pending:'alfAwafi_pendingReviews',approved:'alfAwafi_approvedReviews',rejected:'alfAwafi_rejectedReviews'};
+  const items=LS.get(keyMap[tab],[]);
+  const r=items[i];
+  if(!r) return;
+  editingRevKey=keyMap[tab];
+  editingRevIdx=i;
+  editRevStars=r.rating||5;
+  document.getElementById('rev-edit-name').value=r.name||'';
+  document.getElementById('rev-edit-comment').value=r.comment||'';
+  renderRevStars(editRevStars);
+  document.getElementById('review-edit-modal').classList.add('open');
+}
+
+function setRevStars(n){ editRevStars=n; renderRevStars(n); }
+function renderRevStars(n){
+  const spans=document.querySelectorAll('#rev-edit-stars span');
+  // LTR order in DOM is 5,4,3,2,1
+  spans.forEach((s,idx)=>{ const starVal=5-idx; s.classList.toggle('on',starVal<=n); });
+}
+
+function saveReviewEdit(){
+  if(!editingRevKey) return;
+  const items=LS.get(editingRevKey,[]);
+  const r=items[editingRevIdx];
+  if(!r){ document.getElementById('review-edit-modal').classList.remove('open'); return; }
+  r.name=document.getElementById('rev-edit-name').value.trim()||r.name;
+  r.comment=document.getElementById('rev-edit-comment').value.trim()||r.comment;
+  r.rating=editRevStars;
+  LS.set(editingRevKey,items);
+  document.getElementById('review-edit-modal').classList.remove('open');
+  renderReviews(); toast('✅ تم تحديث التقييم');
+}
+
+/* ════════════════════════════════════════════
+   BRANCHES
+════════════════════════════════════════════ */
+let editingBranchId=null;
+
+function renderBranches(){
+  const branches=LS.get('alfAwafi_branches');
+  branches.sort((a,b)=>(a.sortOrder||99)-(b.sortOrder||99));
+  const c=document.getElementById('branches-list');
+  if(!branches.length){
+    c.innerHTML=`<div class="empty-state"><div class="empty-icon">📍</div><p>لا توجد فروع بعد</p></div>`;
+    return;
+  }
+  c.innerHTML=branches.map(b=>`
+    <div class="branch-admin-card" style="${b.active===false?'opacity:0.6':''}">
+      <div style="font-size:2rem">📍</div>
+      <div class="branch-admin-info">
+        <div class="branch-admin-name">
+          ${escH(b.name)}
+          ${b.active===false?`<span class="branch-inactive-badge">غير نشط</span>`:`<span class="branch-active-badge">نشط</span>`}
+        </div>
+        <div class="branch-admin-detail">📌 ${escH(b.address)}</div>
+        <div class="branch-admin-detail">🕙 ${escH(b.hours||'—')}</div>
+        <div class="branch-admin-detail">📞 ${escH(b.phone||'—')}</div>
+        ${b.mapsUrl?`<div class="branch-admin-detail">🗺️ <a href="${escH(b.mapsUrl)}" target="_blank" style="color:var(--orange)">فتح الخريطة</a></div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        <label class="toggle-wrap" style="font-size:0.8rem">
+          <label class="toggle"><input type="checkbox" ${b.active!==false?'checked':''} onchange="toggleBranchActive(${b.id},this.checked)"/><span class="toggle-slider"></span></label>
+          <span>${b.active!==false?'نشط':'معطّل'}</span>
+        </label>
+        <button class="btn btn-ghost btn-sm" onclick="openBranchModal(${b.id})">✏️ تعديل</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteBranchSafe(${b.id})">🗑️ حذف</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleBranchActive(id,val){
+  const branches=LS.get('alfAwafi_branches');
+  const b=branches.find(x=>x.id===id);
+  if(!b) return;
+  b.active=val;
+  LS.set('alfAwafi_branches',branches);
+  renderBranches();
+  toast(val?'✅ الفرع نشط الآن':'الفرع معطّل');
+}
+
+function deleteBranchSafe(id){
+  const orders=LS.get('alfAwafi_orders');
+  const branch=LS.get('alfAwafi_branches').find(x=>x.id===id);
+  if(!branch) return;
+  const hasOrders=orders.some(o=>o.branch===branch.name);
+  if(hasOrders){
+    showConfirm(`حذف الفرع "${branch.name}"`,
+      `هذا الفرع لديه طلبات مرتبطة به. سيظل الطلبات التاريخية محفوظة لكن الفرع سيُحذف نهائياً. هل تريد المتابعة؟`,
+      ()=>{ LS.set('alfAwafi_branches',LS.get('alfAwafi_branches').filter(x=>x.id!==id)); renderBranches(); toast('تم حذف الفرع'); });
+  } else {
+    showConfirm(`حذف الفرع "${branch.name}"`, 'سيتم حذف هذا الفرع نهائياً.',
+      ()=>{ LS.set('alfAwafi_branches',LS.get('alfAwafi_branches').filter(x=>x.id!==id)); renderBranches(); toast('تم حذف الفرع'); });
+  }
+}
+
+function openBranchModal(id=null){
+  editingBranchId=id;
+  document.getElementById('branch-modal-title').textContent=id?'تعديل الفرع':'إضافة فرع جديد';
+  if(id){
+    const b=LS.get('alfAwafi_branches').find(x=>x.id===id);
+    if(!b) return;
+    document.getElementById('branch-name').value=b.name||'';
+    document.getElementById('branch-address').value=b.address||'';
+    document.getElementById('branch-hours').value=b.hours||'';
+    document.getElementById('branch-phone').value=b.phone||'';
+    document.getElementById('branch-maps').value=b.mapsUrl||'';
+    document.getElementById('branch-embed').value=b.embedUrl||'';
+    document.getElementById('branch-sort-order').value=b.sortOrder||1;
+    document.getElementById('branch-active').checked=b.active!==false;
+  } else {
+    ['branch-name','branch-address','branch-hours','branch-phone','branch-maps','branch-embed'].forEach(fid=>document.getElementById(fid).value='');
+    document.getElementById('branch-sort-order').value='';
+    document.getElementById('branch-active').checked=true;
+  }
+  document.getElementById('branch-modal').classList.add('open');
+}
+
+function closeBranchModal(){ document.getElementById('branch-modal').classList.remove('open'); }
+
+function saveBranch(){
+  const name=document.getElementById('branch-name').value.trim();
+  const address=document.getElementById('branch-address').value.trim();
+  if(!name||!address){ toast('يرجى إدخال الاسم والعنوان','error'); return; }
+  const branches=LS.get('alfAwafi_branches');
+  const sortOrder=parseInt(document.getElementById('branch-sort-order').value)||branches.length+1;
+  const active=document.getElementById('branch-active').checked;
+  const data={name,address,
+    hours:document.getElementById('branch-hours').value.trim(),
+    phone:document.getElementById('branch-phone').value.trim(),
+    mapsUrl:document.getElementById('branch-maps').value.trim(),
+    embedUrl:document.getElementById('branch-embed').value.trim(),
+    sortOrder,active};
+  if(editingBranchId){
+    const idx=branches.findIndex(x=>x.id===editingBranchId);
+    if(idx>-1) branches[idx]={...branches[idx],...data};
+    toast('✅ تم تحديث الفرع');
+  } else {
+    data.id=Date.now();
+    branches.push(data);
+    toast('✅ تمت إضافة الفرع');
+  }
+  LS.set('alfAwafi_branches',branches);
+  closeBranchModal();
+  renderBranches();
+}
+
+function deleteBranch(id){ deleteBranchSafe(id); /* legacy alias */
+}
+
+/* ════════════════════════════════════════════
+   ORDER SETTINGS
+════════════════════════════════════════════ */
+/* ─── Branch Settings Helpers ─── */
+function getBranchSettings(branchName){
+  const all=LS.get('alfAwafi_branchSettings',{});
+  return all[branchName]||{};
+}
+function saveBranchSetting(branchName,key,val){
+  const all=LS.get('alfAwafi_branchSettings',{});
+  if(!all[branchName]) all[branchName]={};
+  all[branchName][key]=val;
+  LS.set('alfAwafi_branchSettings',all);
+}
+
+function renderOrderSettings(){
+  const s=LS.get('alfAwafi_orderTypeSettings',{});
+  const defs={'dine-in':true,takeaway:true,delivery:true};
+  // Support old camelCase keys from legacy data
+  const merged={
+    'dine-in': s['dine-in']!==undefined ? s['dine-in'] : (s.dineIn!==undefined ? s.dineIn : true),
+    takeaway:  s.takeaway!==undefined ? s.takeaway : true,
+    delivery:  s.delivery!==undefined ? s.delivery : true,
+  };
+  const labels={'dine-in':{label:'الجلوس في المطعم',icon:'🪑'},takeaway:{label:'استلام من المطعم',icon:'🛍️'},delivery:{label:'توصيل لباب البيت',icon:'🛵'}};
+
+  document.getElementById('order-types-settings').innerHTML=Object.keys(labels).map(k=>`
+    <div class="settings-row">
+      <div><div class="settings-row-label">${labels[k].icon} ${labels[k].label}</div></div>
+      <label class="toggle-wrap">
+        <label class="toggle"><input type="checkbox" ${merged[k]?'checked':''} onchange="toggleOrderType('${k}',this.checked)"/><span class="toggle-slider"></span></label>
+        <span style="font-size:0.85rem;color:var(--gray)">${merged[k]?'مفعّل':'معطّل'}</span>
+      </label>
+    </div>`).join('');
+
+  // Per-branch order type settings
+  const branches=LS.get('alfAwafi_branches');
+  const perBranchHtml=branches.length ? branches.map(b=>{
+    const bs=getBranchSettings(b.name);
+    return `<div class="per-branch-settings-section">
+      <div class="per-branch-settings-title">📍 ${escH(b.name)} ${b.active===false?'<span class="branch-inactive-badge">غير نشط</span>':''}</div>
+      ${Object.keys(labels).map(k=>{
+        const val=bs[k]!==undefined?bs[k]:merged[k];
+        return `<div class="branch-avail-row">
+          <span style="font-size:0.85rem">${labels[k].icon} ${labels[k].label}</span>
+          <label class="toggle-wrap">
+            <label class="toggle"><input type="checkbox" ${val?'checked':''} onchange="toggleBranchOrderType('${escH(b.name)}','${k}',this.checked)"/><span class="toggle-slider"></span></label>
+            <span style="font-size:0.82rem;color:var(--gray)">${val?'مفعّل':'معطّل'}</span>
+          </label>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('') : '<p style="color:var(--gray);font-size:0.85rem">لا توجد فروع. أضف فروعاً أولاً لتخصيص إعداداتها.</p>';
+
+  // Insert per-branch section after global settings
+  let pbContainer=document.getElementById('per-branch-order-settings');
+  if(!pbContainer){
+    const globalSection=document.getElementById('order-types-settings').parentElement;
+    const div=document.createElement('div');
+    div.className='section-card';
+    div.id='per-branch-order-settings-wrap';
+    div.innerHTML=`<h3>إعدادات أنواع الطلبات لكل فرع</h3><div id="per-branch-order-settings"></div>`;
+    globalSection.insertAdjacentElement('afterend',div);
+    pbContainer=document.getElementById('per-branch-order-settings');
+  }
+  pbContainer.innerHTML=perBranchHtml;
+
+  const prep=LS.str('alfAwafi_prepTime','30');
+  document.getElementById('prep-time-input').value=prep;
+
+  renderPlatforms();
+}
+
+function toggleOrderType(key,val){
+  const s=LS.get('alfAwafi_orderTypeSettings',{});
+  s[key]=val;
+  LS.set('alfAwafi_orderTypeSettings',s);
+  toast(val?'✅ تم تفعيل نوع الطلب':'تم تعطيل نوع الطلب');
+  renderOrderSettings();
+}
+
+function toggleBranchOrderType(branchName,key,val){
+  saveBranchSetting(branchName,key,val);
+  toast(val?`✅ ${branchName} — تم تفعيل النوع`:`${branchName} — تم تعطيل النوع`);
+  renderOrderSettings();
+}
+
+function savePrepTime(){
+  const v=parseInt(document.getElementById('prep-time-input').value)||30;
+  LS.setStr('alfAwafi_prepTime',String(v));
+  toast('✅ تم حفظ وقت التحضير');
+}
+
+/* ── Delivery Platforms ── */
+let editingPlatId=null;
+
+function renderPlatforms(){
+  const plats=LS.get('alfAwafi_deliveryPlatforms');
+  const c=document.getElementById('platforms-list');
+  if(!plats.length){
+    c.innerHTML=`<p style="color:var(--gray);font-size:0.85rem">لا توجد منصات بعد</p>`;
+    return;
+  }
+  c.innerHTML=plats.map(p=>`
+    <div class="platform-row">
+      <div class="platform-logo">${p.icon&&!p.icon.startsWith('http')?p.icon:`<img src="${escH(p.icon||'')}" onerror="this.parentElement.textContent='🚀'"/>`}</div>
+      <div style="flex:1;min-width:0">
+        <div class="platform-name">${escH(p.name)}</div>
+        <div class="platform-url">${escH(p.url)}</div>
+      </div>
+      <label class="toggle" title="${p.enabled?'مفعّل':'معطّل'}">
+        <input type="checkbox" ${p.enabled?'checked':''} onchange="togglePlatform(${p.id},this.checked)"/>
+        <span class="toggle-slider"></span>
+      </label>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="openPlatformModal(${p.id})">✏️</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deletePlatform(${p.id})">🗑️</button>
+    </div>`).join('');
+}
+
+function openPlatformModal(id=null){
+  editingPlatId=id;
+  document.getElementById('platform-modal-title').textContent=id?'تعديل المنصة':'إضافة منصة توصيل';
+  if(id){
+    const p=LS.get('alfAwafi_deliveryPlatforms').find(x=>x.id===id);
+    if(!p) return;
+    document.getElementById('plat-name').value=p.name||'';
+    document.getElementById('plat-url').value=p.url||'';
+    document.getElementById('plat-icon').value=p.icon||'';
+  } else {
+    document.getElementById('plat-name').value='';
+    document.getElementById('plat-url').value='';
+    document.getElementById('plat-icon').value='';
+  }
+  document.getElementById('platform-modal').classList.add('open');
+}
+
+function savePlatform(){
+  const name=document.getElementById('plat-name').value.trim();
+  const url=document.getElementById('plat-url').value.trim();
+  if(!name||!url){ toast('أدخل الاسم والرابط','error'); return; }
+  const plats=LS.get('alfAwafi_deliveryPlatforms');
+  const data={name,url,icon:document.getElementById('plat-icon').value.trim()||'🚀',enabled:true};
+  if(editingPlatId){
+    const idx=plats.findIndex(x=>x.id===editingPlatId);
+    if(idx>-1) plats[idx]={...plats[idx],...data};
+    toast('✅ تم تحديث المنصة');
+  } else {
+    data.id=Date.now(); plats.push(data);
+    toast('✅ تمت إضافة المنصة');
+  }
+  LS.set('alfAwafi_deliveryPlatforms',plats);
+  document.getElementById('platform-modal').classList.remove('open');
+  renderPlatforms();
+}
+
+function togglePlatform(id,val){
+  const plats=LS.get('alfAwafi_deliveryPlatforms');
+  const p=plats.find(x=>x.id===id);
+  if(p){ p.enabled=val; LS.set('alfAwafi_deliveryPlatforms',plats); renderPlatforms(); toast(val?'✅ المنصة مفعّلة':'المنصة معطّلة'); }
+}
+
+function deletePlatform(id){
+  showConfirm('حذف المنصة','سيتم حذف هذه المنصة.',()=>{
+    LS.set('alfAwafi_deliveryPlatforms',LS.get('alfAwafi_deliveryPlatforms').filter(x=>x.id!==id));
+    renderPlatforms(); toast('تم حذف المنصة');
+  });
+}
+
+/* ════════════════════════════════════════════
+   GENERAL SETTINGS
+════════════════════════════════════════════ */
+function loadSettings(){
+  const s=LS.get('alfAwafi_restaurantSettings',{});
+  document.getElementById('set-name').value=s.name||'ألف عوافي';
+  document.getElementById('set-tagline').value=s.tagline||'طعم يشعل حواسك';
+  document.getElementById('set-whatsapp').value=s.whatsapp||'966560670698';
+  document.getElementById('set-vat').value=s.vat!==undefined?s.vat:15;
+  ['set-old-pw','set-new-pw','set-confirm-pw'].forEach(id=>document.getElementById(id).value='');
+}
+
+function saveRestaurantSettings(){
+  const s={
+    name:document.getElementById('set-name').value.trim(),
+    tagline:document.getElementById('set-tagline').value.trim(),
+    whatsapp:document.getElementById('set-whatsapp').value.trim(),
+    vat:parseFloat(document.getElementById('set-vat').value)||15,
+  };
+  LS.set('alfAwafi_restaurantSettings',s);
+  toast('✅ تم حفظ الإعدادات بنجاح');
+}
+
+function changePassword(){
+  const old=document.getElementById('set-old-pw').value;
+  const nw=document.getElementById('set-new-pw').value;
+  const cf=document.getElementById('set-confirm-pw').value;
+  if(old!==getAdminPassword()){ toast('كلمة المرور الحالية غير صحيحة','error'); return; }
+  if(!nw||nw.length<4){ toast('كلمة المرور الجديدة قصيرة جداً (٤ أحرف على الأقل)','error'); return; }
+  if(nw!==cf){ toast('كلمة المرور الجديدة غير متطابقة','error'); return; }
+  LS.setStr('alfAwafi_adminPassword',nw);
+  toast('✅ تم تغيير كلمة المرور بنجاح');
+  ['set-old-pw','set-new-pw','set-confirm-pw'].forEach(id=>document.getElementById(id).value='');
+}
+
+/* ════════════════════════════════════════════
+   CONFIRM HELPER
+════════════════════════════════════════════ */
+function showConfirm(title,msg,onOk){
+  document.getElementById('confirm-modal-title').textContent=title;
+  document.getElementById('confirm-modal-msg').textContent=msg;
+  const btn=document.getElementById('confirm-modal-ok');
+  btn.onclick=()=>{ document.getElementById('confirm-modal').classList.remove('open'); onOk(); };
+  document.getElementById('confirm-modal').classList.add('open');
+}
+
+/* ════════════════════════════════════════════
+   UTILS
+════════════════════════════════════════════ */
+function escH(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtTime(iso){
+  if(!iso) return '—';
+  try{
+    const d=new Date(iso);
+    return d.toLocaleDateString('ar-SA',{month:'short',day:'numeric'})+' '+
+           d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){ return iso.slice(0,16); }
+}
+
+function statusLabel(s){
+  const m={new:'جديد',preparing:'قيد التحضير',ready:'جاهز',completed:'مكتمل',cancelled:'ملغي'};
+  return m[s]||s;
+}
+
+function statusBadge(s){
+  const cls={new:'badge-new',preparing:'badge-prep',ready:'badge-ready',completed:'badge-done',cancelled:'badge-cancelled'};
+  return `<span class="badge ${cls[s]||'badge-new'}">${statusLabel(s)}</span>`;
+}
+
+function orderTypeLabel(t){
+  const m={'dine-in':'🪑 جلوس',takeaway:'🛍️ استلام',delivery:'🛵 توصيل'};
+  return m[t]||t||'—';
+}
+
+/* ════════════════════════════════════════════
+   DEMO DATA SEEDER
+════════════════════════════════════════════ */
+function seedDemoOrders(){
+  const key='alfAwafi_orders';
+  const existing=LS.get(key);
+  if(existing&&existing.length>=50) return; // already have enough data
+
+  const menuItems=LS.get('alfAwafi_menuItems');
+  const branches=LS.get('alfAwafi_branches');
+  if(!menuItems.length||!branches.length) return;
+
+  const statuses=['new','preparing','ready','completed','completed','completed','completed','cancelled'];
+  const orderTypes=['dine-in','takeaway','delivery','dine-in','takeaway','delivery'];
+  const names=['أحمد محمد','فهد العتيبي','سارة الزهراني','خالد الدوسري','نورة المطيري',
+               'محمد القحطاني','عبدالله الشمري','منال الغامدي','سلطان الحربي','ريم البقمي',
+               'عمر السبيعي','لمى الشهري','تركي الرشيدي','هند الحربي','بدر الزهراني'];
+  const notes=['','','','بدون بصل','حار جداً','توصيل سريع لو سمحتم',''];
+
+  const orders=[];
+  const now=Date.now();
+  const span90=90*24*60*60*1000;
+  const vatRate=parseFloat((LS.get('alfAwafi_restaurantSettings',{})).vat||15)/100;
+
+  for(let i=0;i<200;i++){
+    const createdAt=new Date(now-Math.random()*span90);
+    const branch=branches[Math.floor(Math.random()*branches.length)].name;
+    const status=statuses[Math.floor(Math.random()*statuses.length)];
+    const orderType=orderTypes[Math.floor(Math.random()*orderTypes.length)];
+    const itemCount=Math.floor(Math.random()*4)+1;
+    const items=[];
+    let subtotal=0;
+    for(let j=0;j<itemCount;j++){
+      const mi=menuItems[Math.floor(Math.random()*menuItems.length)];
+      const qty=Math.floor(Math.random()*3)+1;
+      items.push({name:mi.name,price:mi.price,qty,cat:mi.cat});
+      subtotal+=mi.price*qty;
+    }
+    const total=(subtotal*(1+vatRate)).toFixed(2);
+    const dateStr=createdAt.toISOString().slice(0,10).replace(/-/g,'');
+    const orderId=`ORD-${dateStr}-${String(i+1001).padStart(4,'0')}`;
+
+    orders.push({
+      orderId,
+      customerName:names[Math.floor(Math.random()*names.length)],
+      phone:`05${String(Math.floor(10000000+Math.random()*89999999))}`,
+      orderType,branch,items,total,status,
+      notes:notes[Math.floor(Math.random()*notes.length)],
+      tableNumber:orderType==='dine-in'?Math.floor(Math.random()*20)+1:null,
+      deliveryAddress:orderType==='delivery'?'الرياض، حي العليا':'',
+      createdAt:createdAt.toISOString(),
+      rating:Math.floor(Math.random()*5)+1,
+      statusHistory:[{status,at:createdAt.toISOString()}]
+    });
+  }
+
+  orders.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  LS.set(key,orders);
+
+  // Seed approved reviews from demo orders
+  if(!LS.get('alfAwafi_approvedReviews').length){
+    const revOrders=orders.filter(o=>o.rating&&o.status==='completed').slice(0,25);
+    const reviews=revOrders.map(o=>({
+      name:o.customerName,
+      rating:o.rating,
+      comment:o.rating>=4?'خدمة ممتازة وطعام رائع! سأعود حتماً':
+              o.rating===3?'جيد بشكل عام، يمكن تحسين بعض الأمور':
+              'الخدمة تحتاج إلى تحسين',
+      date:new Date(o.createdAt).toLocaleDateString('ar-SA')
+    }));
+    LS.set('alfAwafi_approvedReviews',reviews);
+  }
+}
+
+/* ════════════════════════════════════════════
+   REPORTS — STATE
+════════════════════════════════════════════ */
+const CHARTS={};
+let reportsDateRange='month';
+let reportsCustomStart=null;
+let reportsCustomEnd=null;
+let reportsBranchFilter='all';
+
+const CHART_COLORS=['#E63946','#F77F00','#FCBF49','#ffffff','#2EC4B6','#9B5DE5','#06D6A0','#118AB2','#FF6B6B','#FFD93D'];
+
+/* ── Date helpers ── */
+function getDateRange(range){
+  const now=new Date();
+  const end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59,999);
+  let start;
+  if(range==='today'){
+    start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  } else if(range==='week'){
+    start=new Date(end); start.setDate(start.getDate()-6); start.setHours(0,0,0,0);
+  } else if(range==='month'){
+    start=new Date(now.getFullYear(),now.getMonth(),1);
+  } else if(range==='year'){
+    start=new Date(now.getFullYear(),0,1);
+  } else if(range==='custom'){
+    start=reportsCustomStart?new Date(reportsCustomStart):new Date(end.getTime()-30*864e5);
+    start.setHours(0,0,0,0);
+    const cEnd=reportsCustomEnd?new Date(reportsCustomEnd):end;
+    cEnd.setHours(23,59,59,999);
+    return{start,end:cEnd};
+  } else {
+    start=new Date(now.getFullYear(),now.getMonth(),1);
+  }
+  return{start,end};
+}
+
+function getPrevRange(range){
+  const{start,end}=getDateRange(range);
+  const dur=end.getTime()-start.getTime();
+  return{start:new Date(start.getTime()-dur-1),end:new Date(start.getTime()-1)};
+}
+
+function filterOrders(orders){
+  const{start,end}=getDateRange(reportsDateRange);
+  return orders.filter(o=>{
+    const d=new Date(o.createdAt);
+    if(isNaN(d)||d<start||d>end) return false;
+    if(reportsBranchFilter!=='all'&&o.branch!==reportsBranchFilter) return false;
+    return true;
+  });
+}
+
+/* ── Chart.js global defaults ── */
+function applyChartDefaults(){
+  if(!window.Chart) return;
+  Chart.defaults.color='#999';
+  Chart.defaults.font.family="'Cairo', sans-serif";
+  Chart.defaults.plugins.legend.labels.color='#ccc';
+  Chart.defaults.plugins.tooltip.backgroundColor='rgba(14,14,14,0.95)';
+  Chart.defaults.plugins.tooltip.titleColor='#fff';
+  Chart.defaults.plugins.tooltip.bodyColor='#ccc';
+  Chart.defaults.plugins.tooltip.borderColor='rgba(255,255,255,0.1)';
+  Chart.defaults.plugins.tooltip.borderWidth=1;
+  Chart.defaults.plugins.tooltip.cornerRadius=6;
+  Chart.defaults.plugins.tooltip.padding=10;
+  Chart.defaults.animation.duration=800;
+  Chart.defaults.animation.easing='easeOutQuart';
+}
+
+function makeChart(canvasId,type,data,extraOpts={}){
+  if(CHARTS[canvasId]){CHARTS[canvasId].destroy();delete CHARTS[canvasId];}
+  const canvas=document.getElementById(canvasId);
+  if(!canvas) return;
+  clearEmpty(canvasId);
+
+  const isCartesian=!['pie','doughnut','polarArea'].includes(type);
+  const scaleOpts=isCartesian?{
+    x:{ticks:{color:'#999',font:{family:"'Cairo',sans-serif",size:11}},grid:{color:'rgba(255,255,255,0.05)'},border:{color:'rgba(255,255,255,0.08)'}},
+    y:{ticks:{color:'#999',font:{family:"'Cairo',sans-serif",size:11}},grid:{color:'rgba(255,255,255,0.05)'},border:{color:'rgba(255,255,255,0.08)'}}
+  }:{};
+
+  const opts={
+    responsive:true,maintainAspectRatio:true,
+    plugins:{
+      legend:{labels:{color:'#ccc',font:{family:"'Cairo',sans-serif",size:12},padding:16,usePointStyle:true}},
+      tooltip:{callbacks:{label:ctx=>{
+        const val=parseFloat(ctx.raw||0);
+        return ` ${isNaN(val)?ctx.raw:val.toLocaleString('ar-SA')}`;
+      }}}
+    },
+    scales:scaleOpts,
+    ...extraOpts
+  };
+
+  CHARTS[canvasId]=new Chart(canvas.getContext('2d'),{type,data,options:opts});
+  return CHARTS[canvasId];
+}
+
+function showEmpty(id){
+  const c=document.getElementById(id); if(!c) return;
+  c.style.display='none';
+  const w=c.parentElement;
+  if(!w.querySelector('.chart-empty')){
+    const d=document.createElement('div'); d.className='chart-empty';
+    d.textContent='لا توجد بيانات كافية لعرض هذا التقرير'; w.appendChild(d);
+  }
+}
+function clearEmpty(id){
+  const c=document.getElementById(id); if(!c) return;
+  c.style.display='block';
+  const e=c.parentElement?.querySelector('.chart-empty'); if(e) e.remove();
+}
+
+/* ════════════════════════════════════════════
+   REPORTS — RENDER
+════════════════════════════════════════════ */
+function renderReports(){
+  applyChartDefaults();
+  // Populate branch filter
+  const branches=LS.get('alfAwafi_branches');
+  const sel=document.getElementById('reports-branch-filter');
+  if(sel){
+    const cur=sel.value||'all';
+    sel.innerHTML=`<option value="all">كل الفروع</option>`+
+      branches.map(b=>`<option value="${escH(b.name)}"${b.name===cur?' selected':''}>${escH(b.name)}</option>`).join('');
+  }
+  updateReports();
+}
+
+function updateReports(){
+  if(!window.Chart){ setTimeout(updateReports,300); return; }
+  applyChartDefaults();
+  const allOrders=LS.get('alfAwafi_orders');
+  const filtered=filterOrders(allOrders);
+
+  renderReportKPIs(filtered,allOrders);
+  renderRevenueChart(filtered);
+  renderPeakHoursChart(filtered);
+  renderBranchSalesChart(filtered);
+  renderTopItemsChart(filtered);
+  renderLeastItemsChart(filtered);
+  renderOrderTypesChart(filtered);
+  renderOrderStatusChart(filtered);
+  renderDailyOrdersChart(filtered);
+  renderRatingDistChart(allOrders);
+  renderRatingPosNegChart(allOrders);
+  renderCategoryShareChart(filtered);
+  renderBranchRevChart(filtered);
+}
+
+/* ── KPI Cards ── */
+function renderReportKPIs(filtered,allOrders){
+  const totalRev=filtered.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const totalOrd=filtered.length;
+  const avgOrd=totalOrd?totalRev/totalOrd:0;
+  const ratings=filtered.map(o=>o.rating).filter(r=>r>0);
+  const avgRating=ratings.length?(ratings.reduce((s,r)=>s+r,0)/ratings.length):0;
+
+  const{start:ps,end:pe}=getPrevRange(reportsDateRange);
+  const prev=allOrders.filter(o=>{
+    const d=new Date(o.createdAt);
+    return d>=ps&&d<=pe&&(reportsBranchFilter==='all'||o.branch===reportsBranchFilter);
+  });
+  const prevRev=prev.reduce((s,o)=>s+parseFloat(o.total||0),0);
+  const prevOrd=prev.length;
+  const prevAvg=prevOrd?prevRev/prevOrd:0;
+
+  function chg(curr,prv){
+    if(!prv) return curr>0?{v:'+جديد',cls:'up'}:{v:'—',cls:'neutral'};
+    const p=((curr-prv)/prv*100).toFixed(1);
+    return p>=0?{v:`▲ +${p}%`,cls:'up'}:{v:`▼ ${Math.abs(p)}%`,cls:'down'};
+  }
+  const r=chg(totalRev,prevRev),o=chg(totalOrd,prevOrd),a=chg(avgOrd,prevAvg);
+
+  document.getElementById('reports-kpi-container').innerHTML=`
+    <div class="reports-kpi-card r1">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">إجمالي الإيرادات</div>
+      <div class="kpi-value">${totalRev.toFixed(0)}<small style="font-size:.5em;color:var(--gray);font-weight:400"> ر.س</small></div>
+      <div class="kpi-change ${r.cls}">${r.v} مقارنةً بالفترة السابقة</div>
+    </div>
+    <div class="reports-kpi-card r2">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-label">إجمالي الطلبات</div>
+      <div class="kpi-value">${totalOrd}</div>
+      <div class="kpi-change ${o.cls}">${o.v} مقارنةً بالفترة السابقة</div>
+    </div>
+    <div class="reports-kpi-card r3">
+      <div class="kpi-icon">🧾</div>
+      <div class="kpi-label">متوسط قيمة الطلب</div>
+      <div class="kpi-value">${avgOrd.toFixed(0)}<small style="font-size:.5em;color:var(--gray);font-weight:400"> ر.س</small></div>
+      <div class="kpi-change ${a.cls}">${a.v} مقارنةً بالفترة السابقة</div>
+    </div>
+    <div class="reports-kpi-card r4">
+      <div class="kpi-icon">⭐</div>
+      <div class="kpi-label">متوسط التقييم</div>
+      <div class="kpi-value">${avgRating?avgRating.toFixed(1):'—'}</div>
+      <div class="kpi-change neutral">${ratings.length} تقييم في الفترة المحددة</div>
+    </div>`;
+}
+
+/* ── 1. Revenue over time ── */
+function renderRevenueChart(orders){
+  if(!orders.length){showEmpty('chart-revenue');return;}
+  const byDate={};
+  orders.forEach(o=>{
+    const d=new Date(o.createdAt).toISOString().slice(0,10);
+    byDate[d]=(byDate[d]||0)+parseFloat(o.total||0);
+  });
+  const keys=Object.keys(byDate).sort();
+  makeChart('chart-revenue','line',{
+    labels:keys.map(d=>new Date(d).toLocaleDateString('ar-SA',{month:'short',day:'numeric'})),
+    datasets:[{
+      label:'الإيرادات (ر.س)',data:keys.map(k=>+byDate[k].toFixed(2)),
+      borderColor:'#E63946',backgroundColor:'rgba(230,57,70,0.08)',
+      tension:0.4,fill:true,pointBackgroundColor:'#E63946',pointRadius:3,pointHoverRadius:6,
+    }]
+  },{plugins:{legend:{display:false}}});
+}
+
+/* ── 2. Peak hours ── */
+function renderPeakHoursChart(orders){
+  if(!orders.length){showEmpty('chart-peak');return;}
+  const byHour=Array(24).fill(0);
+  orders.forEach(o=>{ const h=new Date(o.createdAt).getHours(); byHour[h]++; });
+  const hours=Array.from({length:16},(_,i)=>i+8);
+  const data=hours.map(h=>byHour[h]);
+  const maxVal=Math.max(...data);
+  makeChart('chart-peak','bar',{
+    labels:hours.map(h=>`${h}:00`),
+    datasets:[{
+      label:'عدد الطلبات',data,borderRadius:5,
+      backgroundColor:data.map(v=>v===maxVal&&v>0?'#E63946':'rgba(230,57,70,0.35)'),
+    }]
+  },{plugins:{legend:{display:false}}});
+}
+
+/* ── 3. Branch sales comparison ── */
+function renderBranchSalesChart(orders){
+  if(!orders.length){showEmpty('chart-branch-sales');return;}
+  const byBranch={};
+  orders.forEach(o=>{ const b=o.branch||'غير محدد'; byBranch[b]=(byBranch[b]||0)+1; });
+  const labels=Object.keys(byBranch);
+  makeChart('chart-branch-sales','bar',{
+    labels,
+    datasets:[{label:'عدد الطلبات',data:labels.map(l=>byBranch[l]),
+      backgroundColor:CHART_COLORS.slice(0,labels.length),borderRadius:5}]
+  },{plugins:{legend:{display:false}}});
+}
+
+/* ── 4. Top 10 items ── */
+function renderTopItemsChart(orders){
+  if(!orders.length){showEmpty('chart-top-items');return;}
+  const cnt={};
+  orders.forEach(o=>(o.items||[]).forEach(i=>{cnt[i.name]=(cnt[i.name]||0)+(i.qty||1);}));
+  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if(!sorted.length){showEmpty('chart-top-items');return;}
+  makeChart('chart-top-items','bar',{
+    labels:sorted.map(([n])=>n),
+    datasets:[{label:'الكمية المباعة',data:sorted.map(([,v])=>v),
+      backgroundColor:'#F77F00',borderRadius:5}]
+  },{indexAxis:'y',plugins:{legend:{display:false}}});
+}
+
+/* ── 5. Least selling items ── */
+function renderLeastItemsChart(orders){
+  if(!orders.length){showEmpty('chart-least-items');return;}
+  const menuItems=LS.get('alfAwafi_menuItems');
+  const cnt={};
+  menuItems.forEach(i=>{cnt[i.name]=0;});
+  orders.forEach(o=>(o.items||[]).forEach(i=>{cnt[i.name]=(cnt[i.name]||0)+(i.qty||1);}));
+  const sorted=Object.entries(cnt).sort((a,b)=>a[1]-b[1]).slice(0,10);
+  makeChart('chart-least-items','bar',{
+    labels:sorted.map(([n])=>n),
+    datasets:[{label:'الكمية المباعة',data:sorted.map(([,v])=>v),
+      backgroundColor:'#9B5DE5',borderRadius:5}]
+  },{indexAxis:'y',plugins:{legend:{display:false}}});
+}
+
+/* ── 6. Order type doughnut ── */
+function renderOrderTypesChart(orders){
+  if(!orders.length){showEmpty('chart-order-types');return;}
+  const cnt={'dine-in':0,takeaway:0,delivery:0};
+  orders.forEach(o=>{if(cnt[o.orderType]!==undefined)cnt[o.orderType]++;});
+  makeChart('chart-order-types','doughnut',{
+    labels:['🪑 جلوس','🛍️ استلام','🛵 توصيل'],
+    datasets:[{data:Object.values(cnt),backgroundColor:['#E63946','#F77F00','#2EC4B6'],borderWidth:0,hoverOffset:10}]
+  },{cutout:'60%'});
+}
+
+/* ── 7. Orders by status ── */
+function renderOrderStatusChart(orders){
+  if(!orders.length){showEmpty('chart-order-status');return;}
+  const cnt={new:0,preparing:0,ready:0,completed:0,cancelled:0};
+  orders.forEach(o=>{if(cnt[o.status]!==undefined)cnt[o.status]++;});
+  makeChart('chart-order-status','bar',{
+    labels:['جديد','قيد التحضير','جاهز','مكتمل','ملغي'],
+    datasets:[{label:'عدد الطلبات',data:Object.values(cnt),
+      backgroundColor:['#3498db','#F77F00','#FCBF49','#2ecc71','#E63946'],borderRadius:5}]
+  },{plugins:{legend:{display:false}}});
+}
+
+/* ── 8. Daily orders line ── */
+function renderDailyOrdersChart(orders){
+  if(!orders.length){showEmpty('chart-daily-orders');return;}
+  const byDate={};
+  orders.forEach(o=>{
+    const d=new Date(o.createdAt).toISOString().slice(0,10);
+    byDate[d]=(byDate[d]||0)+1;
+  });
+  const keys=Object.keys(byDate).sort();
+  makeChart('chart-daily-orders','line',{
+    labels:keys.map(d=>new Date(d).toLocaleDateString('ar-SA',{month:'short',day:'numeric'})),
+    datasets:[{
+      label:'عدد الطلبات',data:keys.map(k=>byDate[k]),
+      borderColor:'#2EC4B6',backgroundColor:'rgba(46,196,182,0.08)',
+      tension:0.4,fill:true,pointBackgroundColor:'#2EC4B6',pointRadius:3,pointHoverRadius:6,
+    }]
+  },{plugins:{legend:{display:false}}});
+}
+
+/* ── 9. Rating distribution ── */
+function renderRatingDistChart(allOrders){
+  const data=[1,2,3,4,5].map(r=>allOrders.filter(o=>o.rating===r).length);
+  if(!data.some(v=>v>0)){showEmpty('chart-rating-dist');return;}
+  makeChart('chart-rating-dist','bar',{
+    labels:['★','★★','★★★','★★★★','★★★★★'],
+    datasets:[{label:'عدد التقييمات',data,
+      backgroundColor:['#E63946','#F77F00','#FCBF49','#2ecc71','#2EC4B6'],borderRadius:5}]
+  },{plugins:{legend:{display:false}}});
+}
+
+/* ── 10. Positive vs negative ── */
+function renderRatingPosNegChart(allOrders){
+  const pos=allOrders.filter(o=>o.rating>=4).length;
+  const neg=allOrders.filter(o=>o.rating>0&&o.rating<=3).length;
+  if(!pos&&!neg){showEmpty('chart-rating-posneg');return;}
+  makeChart('chart-rating-posneg','doughnut',{
+    labels:['إيجابي ٤-٥ ★','سلبي ١-٣ ★'],
+    datasets:[{data:[pos,neg],backgroundColor:['#2EC4B6','#E63946'],borderWidth:0,hoverOffset:10}]
+  },{cutout:'60%'});
+}
+
+/* ── 11. Category share pie ── */
+function renderCategoryShareChart(orders){
+  if(!orders.length){showEmpty('chart-cat-share');return;}
+  const menuItems=LS.get('alfAwafi_menuItems');
+  const nameTocat={};
+  menuItems.forEach(m=>{nameTocat[m.name]=m.cat;});
+  const cnt={};
+  orders.forEach(o=>(o.items||[]).forEach(i=>{
+    const cat=(i.cat||nameTocat[i.name]||'أخرى');
+    cnt[cat]=(cnt[cat]||0)+(i.qty||1);
+  }));
+  const labels=Object.keys(cnt);
+  if(!labels.length){showEmpty('chart-cat-share');return;}
+  makeChart('chart-cat-share','pie',{
+    labels,
+    datasets:[{data:labels.map(l=>cnt[l]),
+      backgroundColor:CHART_COLORS.slice(0,labels.length),borderWidth:0,hoverOffset:10}]
+  },{});
+}
+
+/* ── 12. Branch revenue bar ── */
+function renderBranchRevChart(orders){
+  if(!orders.length){showEmpty('chart-branch-rev');return;}
+  const byBranch={};
+  orders.forEach(o=>{ const b=o.branch||'غير محدد'; byBranch[b]=(byBranch[b]||0)+parseFloat(o.total||0); });
+  const labels=Object.keys(byBranch);
+  makeChart('chart-branch-rev','bar',{
+    labels,
+    datasets:[{label:'الإيرادات (ر.س)',data:labels.map(l=>+byBranch[l].toFixed(2)),
+      backgroundColor:CHART_COLORS.slice(0,labels.length),borderRadius:5}]
+  },{plugins:{legend:{display:false}}});
+}
+
+/* ════════════════════════════════════════════
+   REPORTS — CONTROLS
+════════════════════════════════════════════ */
+function setReportsRange(range){
+  reportsDateRange=range;
+  document.querySelectorAll('.date-range-btn').forEach(b=>b.classList.toggle('active',b.dataset.range===range));
+  const bar=document.getElementById('custom-date-bar');
+  if(bar) bar.classList.toggle('show',range==='custom');
+  if(range!=='custom') updateReports();
+}
+
+function applyCustomRange(){
+  const s=document.getElementById('reports-date-start')?.value;
+  const e=document.getElementById('reports-date-end')?.value;
+  if(s) reportsCustomStart=s;
+  if(e) reportsCustomEnd=e;
+  updateReports();
+}
+
+function setReportsBranch(val){
+  reportsBranchFilter=val;
+  updateReports();
+}
+
+/* ════════════════════════════════════════════
+   REPORTS — EXPORT
+════════════════════════════════════════════ */
+function toggleExportDD(id){
+  document.querySelectorAll('.export-dropdown').forEach(d=>{ if(d.id!==id) d.classList.remove('open'); });
+  document.getElementById(id)?.classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.export-btn-wrap'))
+    document.querySelectorAll('.export-dropdown').forEach(d=>d.classList.remove('open'));
+});
+
+function exportChartCSV(chartId,filename,headers){
+  const ch=CHARTS[chartId]; if(!ch) return;
+  let csv=headers.join(',')+'\n';
+  ch.data.labels.forEach((lbl,i)=>{
+    const vals=ch.data.datasets.map(ds=>ds.data[i]??'').join(',');
+    csv+=`"${lbl}",${vals}\n`;
+  });
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ تم تصدير CSV');
+}
+
+function exportChartPDF(chartId,title){
+  const canvas=document.getElementById(chartId);
+  if(!canvas){toast('لا توجد بيانات للتصدير','error');return;}
+  if(!window.jspdf){toast('جاري تحميل مكتبة PDF...','error');return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  doc.setFillColor(10,10,10); doc.rect(0,0,297,210,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.text(title,148,18,{align:'center'});
+  doc.setFontSize(10); doc.setTextColor(153,153,153);
+  doc.text(new Date().toLocaleDateString('ar-SA'),148,26,{align:'center'});
+  const img=canvas.toDataURL('image/png',1.0);
+  doc.addImage(img,'PNG',14,34,268,140);
+  doc.save(title+'.pdf');
+  toast('✅ تم تصدير PDF');
+}
+
+function exportFullReport(){
+  if(!window.jspdf){toast('جاري تحميل مكتبة PDF...','error');return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  // Dark background
+  doc.setFillColor(10,10,10); doc.rect(0,0,210,297,'F');
+  // Header
+  doc.setTextColor(230,57,70); doc.setFontSize(22); doc.setFont('helvetica','bold');
+  doc.text('ALF AWAFI',105,22,{align:'center'});
+  doc.setTextColor(200,200,200); doc.setFontSize(12); doc.setFont('helvetica','normal');
+  doc.text('Analytics & Reports',105,31,{align:'center'});
+  doc.setFontSize(9); doc.setTextColor(120,120,120);
+  doc.text(new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),105,38,{align:'center'});
+  // Divider
+  doc.setDrawColor(230,57,70); doc.setLineWidth(0.5); doc.line(20,42,190,42);
+
+  // KPIs from DOM
+  let y=52;
+  const kpiEls=document.querySelectorAll('#reports-kpi-container .reports-kpi-card');
+  if(kpiEls.length){
+    doc.setTextColor(230,57,70); doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.text('Key Performance Indicators',20,y); y+=8;
+    kpiEls.forEach(card=>{
+      const lbl=card.querySelector('.kpi-label')?.textContent?.trim()||'';
+      const val=card.querySelector('.kpi-value')?.textContent?.trim().replace(/\s+/g,' ')||'';
+      const chg=card.querySelector('.kpi-change')?.textContent?.trim()||'';
+      doc.setTextColor(180,180,180); doc.setFontSize(9); doc.setFont('helvetica','normal');
+      doc.text(`${lbl}: ${val}  ${chg}`,24,y); y+=7;
+    });
+    y+=4;
+  }
+
+  // Charts in 2-column grid
+  const ids=Object.keys(CHARTS);
+  let col=0;
+  const cw=83, ch=52, xStart=14, gap=6;
+  ids.forEach(id=>{
+    const canvas=document.getElementById(id); if(!canvas) return;
+    try{
+      if(y+ch>285){doc.addPage();doc.setFillColor(10,10,10);doc.rect(0,0,210,297,'F');y=14;col=0;}
+      const xPos=col===0?xStart:xStart+cw+gap;
+      doc.addImage(canvas.toDataURL('image/png',1.0),'PNG',xPos,y,cw,ch);
+      col++;
+      if(col>=2){col=0;y+=ch+gap;}
+    }catch(e){}
+  });
+
+  doc.save('alf-awafi-report-'+new Date().toISOString().slice(0,10)+'.pdf');
+  toast('✅ تم تصدير التقرير الكامل');
+}
+
+/* ════════════════════════════════════════════
+   BOOT
+════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', checkAuth);
+</script>
+</body>
+</html>
